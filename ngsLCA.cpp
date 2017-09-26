@@ -55,7 +55,7 @@ int2int ref2tax(const char *fname,bam_hdr_t *hdr ){
   char2int revmap;
   for(int i=0;i<hdr->n_targets;i++)
     revmap[hdr->target_name[i]] = i;
-  fprintf(stderr,"\t-> Number of SQ tags:%d\n",revmap.size());
+  fprintf(stderr,"\t-> Number of SQ tags:%d from bamfile: \'%s\'\n",revmap.size());
 
 
   
@@ -76,6 +76,7 @@ int2int ref2tax(const char *fname,bam_hdr_t *hdr ){
     int val = atoi(strtok(NULL,"\t\n "));
 
     //check if the key exists in the bamheader, if not then skip this taxid
+    
     char2int::iterator it=revmap.find(key);
     if(it==revmap.end())
       continue;
@@ -105,10 +106,13 @@ int nodes2root(int taxa,int2int &parent){
 
 int do_lca(std::vector<int> &taxids,int2int &parent){
   //  fprintf(stderr,"\t-> [%s] with number of taxids: %lu\n",__func__,taxids.size());
-  if(taxids.size()<2){
+  assert(taxids.size()>0);
+  if(taxids.size()==1){
+    int taxa=taxids[0];
     taxids.clear();
-    return 0;
+    return taxa;
   }
+
   int2int counter;
   for(int i=0;i<taxids.size();i++){
     int taxa = taxids[i];
@@ -141,13 +145,37 @@ int do_lca(std::vector<int> &taxids,int2int &parent){
     return (--dist2root.end())->second;
 }
 
+void print_chain1(FILE *fp,int taxa,int2char &rank,int2char &name_map){
+  int2char::iterator it1=name_map.find(taxa);
+  int2char::iterator it2=rank.find(taxa);
+  assert(it1!=name_map.end());
+  assert(it2!=rank.end());
+  if(it1==name_map.end()||it2==rank.end()){
+    fprintf(stderr,"taxa: %d %s doesnt exists will exit\n",taxa,it1->second);
+    exit(0);
+  }
+  fprintf(fp,"\t%d:%s:%s",taxa,it1->second,it2->second);
+  
+}
 
-void hts(const char *fname,int2int &i2i,int2int& parent,bam_hdr_t *hdr){
+
+void print_chain(FILE *fp,int taxa,int2int &parent,int2char &rank,int2char &name_map){
+
+    while(1){
+      print_chain1(fp,taxa,rank,name_map);
+      int2int::iterator it = parent.find(taxa);
+      assert(it!=parent.end());
+      if(taxa==it->second)//<- catch root
+	break;
+      taxa=it->second;
+    }
+    fprintf(fp,"\n");
+}
+
+void hts(const char *fname,int2int &i2i,int2int& parent,bam_hdr_t *hdr,int2char &rank, int2char &name_map){
   samFile *fp_in = hts_open(fname,"r"); //open bam file
-  fprintf(stderr,"fp_in:%p\n",fp_in);
   bam1_t *aln = bam_init1(); //initialize an alignment
   bam_hdr_t *bamHdr = sam_hdr_read(fp_in)  ;
-  fprintf(stderr,"bamhdfadf:%p\n",bamHdr);
   int comp ;
 
   char *last=NULL;
@@ -161,8 +189,10 @@ void hts(const char *fname,int2int &i2i,int2int& parent,bam_hdr_t *hdr){
       last=strdup(qname);
     if(strcmp(last,qname)!=0){
       if(taxids.size()>0){
+	int size=taxids.size();
 	lca=do_lca(taxids,parent);
-	fprintf(stdout,"%s\t%d\n",last,lca);
+	fprintf(stdout,"%s:%lu\t",last,size);
+	print_chain(stdout,lca,parent,rank,name_map);
       }
       free(last);
       last=strdup(qname);
@@ -175,14 +205,59 @@ void hts(const char *fname,int2int &i2i,int2int& parent,bam_hdr_t *hdr){
       taxids.push_back(it->second);
   }
   if(taxids.size()>0){
+    int size=taxids.size();
     lca=do_lca(taxids,parent);
-    fprintf(stdout,"%s\t%d\n",last,lca);
+    fprintf(stdout,"%s:%lu",last,size);
+    print_chain(stdout,lca,parent,rank,name_map);
   }
   bam_destroy1(aln);
   sam_close(fp_in);
   
   return ;//0;
 }
+
+int2char parse_names(const char *fname){
+
+  gzFile gz= Z_NULL;
+  gz=gzopen(fname,"rb");
+  if(gz==Z_NULL){
+    fprintf(stderr,"\t-> Problems opening file: \'%s\'\n",fname);
+    exit(0);
+  }
+  int2char name_map;
+  char buf[4096];
+  int at=0;
+  char **toks = new char*[5];
+  
+  while(gzgets(gz,buf,4096)){
+    strip(buf);//fprintf(stderr,"buf:%s\n",buf);
+    char *saveptr = buf;
+    toks[0]=strpop(&saveptr,'|');
+    toks[1]= strpop(&saveptr,'|');
+    toks[2]= strpop(&saveptr,'|');
+    toks[3]= strpop(&saveptr,'|');
+    for(int i=0;0&&i<4;i++)
+      fprintf(stderr,"%d):\'%s\'\n",i,toks[i]);
+
+    int key=atoi(toks[0]);
+    //    fprintf(stderr,"key:%d\n",key);
+    if(toks[3]&&strcmp(toks[3],"scientific name")==0){
+      int2char::iterator it=name_map.find(key);
+      
+      if(it!=name_map.end())
+	fprintf(stderr,"\t->[%s] duplicate name(column1): %s\n",fname,toks[0]);
+      else
+	name_map[key]=strdup(toks[1]);
+
+    }
+    if(0&&at++>10)
+      break;
+  }
+  //  int2char::iterator it = name_map.find(61564);  assert(it!=name_map.end());
+  fprintf(stderr,"\t-> [%s] Number of unique names (column1): %lu with third column 'scientific name'\n",fname,name_map.size());
+  return name_map;
+}
+
 
 void parse_nodes(const char *fname,int2char &rank,int2int &parent){
 
@@ -212,11 +287,9 @@ void parse_nodes(const char *fname,int2char &rank,int2int &parent){
       int key=atoi(toks[0]);
       int val= atoi(toks[1]);
       parent[key]=val;
+      rank[key]=strdup(toks[2]);
     }
-    int key=atoi(toks[0]);
-    rank[key]=strdup(toks[2]);
   }
-
   fprintf(stderr,"\t-> Number of unique names (column1): %lu from file: %s\n",rank.size(),fname);
 }
 
@@ -225,7 +298,7 @@ int main(int argc, char **argv){
   const char *htsfile="new.bam";
   const char *as2tax="nucl_gb.accession2taxid.gz";
   const char *nodes = "nodes.dmp";
-
+  const char *names = "names.dmp";
   fprintf(stderr,"\t-> as2fax:%s nodes:%d hts:%s\n",as2tax,nodes,htsfile);
   
   samFile *fp_in = hts_open(htsfile,"r"); //open bam file
@@ -239,12 +312,13 @@ int main(int argc, char **argv){
   
   //map of bamref ->taxid
   int2int i2i= ref2tax(as2tax,bamHdr);
-  parse_nodes(nodes,rank,parent);  
+  parse_nodes(nodes,rank,parent);
+  //map of taxid -> name
+  int2char name_map = parse_names(names);
+  int2char::iterator it = name_map.find(61564);
+  assert(it!=name_map.end());
 
 
-
-
-
-  hts(htsfile,i2i,parent,bamHdr);
+  hts(htsfile,i2i,parent,bamHdr,rank,name_map);
   return 0;
 }
