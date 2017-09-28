@@ -5,8 +5,10 @@
 
  */
 
-int mod_in[] =  {1649555 , 1401172 ,1582271, 374764, 242716,1793725 ,292451};
-int mod_out[]=  {1333996 , 1333996 ,1582270,1914213,1917265,1915309, 263865 };
+int mod_in[] =  {1649555 , 1401172 ,1582271, 374764, 242716,1793725 ,292451,38298,  63403  ,67357  ,\
+		 163247  ,328623   ,356150 , 502130, 545877,996989  ,996990,1086724,1169024,1576640,\
+		 1769757,1802981,1811974 ,1955118};
+int mod_out[]=  {1333996 , 1333996 ,1582270,1914213,1917265,1915309 ,263865,2801 ,1916091,285450,1762941,1916091,157727,1932322,376133,1762939 ,1762946,430531, 1169025,1247960,1769758,1708715,1708715	,1925741};
 
 #include <cassert>
 #include <cstdio>
@@ -31,7 +33,7 @@ typedef std::map<int,char *> int2char;
 typedef std::map<int,int> int2int;
 
 void mod_db(int *in,int *out,int2int &parent, int2char &rank,int2char &name_map){
-  for(int i=0;i<7;i++){
+  for(int i=0;i<24;i++){
     assert(parent.count(out[i])==1);
     parent[in[i]] = parent[out[i]];
     rank[in[i]] = rank[out[i]];
@@ -232,7 +234,7 @@ void hts(const char *fname,int2int &i2i,int2int& parent,bam_hdr_t *hdr,int2char 
 	int size=taxids.size();
 	lca=do_lca(taxids,parent);
 	if(lca!=-1){
-	  fprintf(stdout,"%s:%lu\t",last,size);fflush(stdout);
+	  fprintf(stdout,"%s:%lu",last,size);fflush(stdout);
 	  print_chain(stdout,lca,parent,rank,name_map);
 	}
       }
