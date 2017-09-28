@@ -1,3 +1,13 @@
+/*
+  1649555 -> 1333996
+  1401172 -> 1333996
+  1582271 -> 1582270
+
+ */
+
+int mod_in[] =  {1649555 , 1401172 ,1582271, 374764, 242716,1793725 ,292451};
+int mod_out[]=  {1333996 , 1333996 ,1582270,1914213,1917265,1915309, 263865 };
+
 #include <cassert>
 #include <cstdio>
 #include <zlib.h>
@@ -20,6 +30,16 @@ typedef std::map<char *, int, cmp_str> char2int;
 typedef std::map<int,char *> int2char;
 typedef std::map<int,int> int2int;
 
+void mod_db(int *in,int *out,int2int &parent, int2char &rank,int2char &name_map){
+  for(int i=0;i<7;i++){
+    assert(parent.count(out[i])==1);
+    parent[in[i]] = parent[out[i]];
+    rank[in[i]] = rank[out[i]];
+    name_map[in[i]] = strdup("satan");
+  }
+
+}
+int2int errmap;
 
 //usefull little function to split
 char *strpop(char **str,char split){
@@ -109,7 +129,13 @@ int do_lca(std::vector<int> &taxids,int2int &parent){
   assert(taxids.size()>0);
   if(taxids.size()==1){
     int taxa=taxids[0];
-    taxids.clear();
+    if(parent.count(taxa)==0){
+      fprintf(stderr,"\t-> Problem finding taxaid: %d will skip\n",taxa);
+      taxids.clear();
+      return -1;
+    }
+
+
     return taxa;
   }
 
@@ -125,7 +151,19 @@ int do_lca(std::vector<int> &taxids,int2int &parent){
       }else
 	it->second = it->second+1;
       it = parent.find(taxa);
-      assert(it!=parent.end());
+
+      if(it==parent.end()){
+	int2int::iterator it=errmap.find(taxa);
+	if(it==errmap.end()){
+	  fprintf(stderr,"\t-> Problem finding parent of :%d\n",taxa);
+	  
+	  errmap[taxa] = 1;
+	}else
+	  it->second = it->second +1;
+	taxids.clear();
+	return -1;
+      }
+      
       if(taxa==it->second)//<- catch root
 	break;
       taxa=it->second;
@@ -148,7 +186,9 @@ int do_lca(std::vector<int> &taxids,int2int &parent){
 void print_chain1(FILE *fp,int taxa,int2char &rank,int2char &name_map){
   int2char::iterator it1=name_map.find(taxa);
   int2char::iterator it2=rank.find(taxa);
-  assert(it1!=name_map.end());
+  if(it1==name_map.end()){
+    fprintf(stderr,"\t-> Problem finding taxaid:%d\n",taxa);
+  }
   assert(it2!=rank.end());
   if(it1==name_map.end()||it2==rank.end()){
     fprintf(stderr,"taxa: %d %s doesnt exists will exit\n",taxa,it1->second);
@@ -191,14 +231,29 @@ void hts(const char *fname,int2int &i2i,int2int& parent,bam_hdr_t *hdr,int2char 
       if(taxids.size()>0){
 	int size=taxids.size();
 	lca=do_lca(taxids,parent);
-	fprintf(stdout,"%s:%lu\t",last,size);
-	print_chain(stdout,lca,parent,rank,name_map);
+	if(lca!=-1){
+	  fprintf(stdout,"%s:%lu\t",last,size);fflush(stdout);
+	  print_chain(stdout,lca,parent,rank,name_map);
+	}
       }
       free(last);
       last=strdup(qname);
     }
     
     int2int::iterator it = i2i.find(chr);
+    //filter by nm
+    uint8_t *nm = bam_aux_get(aln,"NM");
+    if(nm!=NULL){
+      int val = (int) bam_aux2i(nm);
+      // fprintf(stderr,"nm:%d\n",val);
+      if(val>0){
+	continue;
+	fprintf(stderr,"skip: %s\n",last);
+      }
+    }
+
+
+    
     if(it==i2i.end())
       fprintf(stderr,"\t-> problem finding chrid:%d chrname:%s\n",chr,hdr->target_name[chr]);
     else
@@ -206,9 +261,13 @@ void hts(const char *fname,int2int &i2i,int2int& parent,bam_hdr_t *hdr,int2char 
   }
   if(taxids.size()>0){
     int size=taxids.size();
-    lca=do_lca(taxids,parent);
-    fprintf(stdout,"%s:%lu",last,size);
-    print_chain(stdout,lca,parent,rank,name_map);
+    if(lca!=-1){
+      lca=do_lca(taxids,parent);
+      if(lca!=-1){
+	fprintf(stdout,"%s:%lu",last,size);fflush(stdout);
+	print_chain(stdout,lca,parent,rank,name_map);
+      }
+    }
   }
   bam_destroy1(aln);
   sam_close(fp_in);
@@ -291,15 +350,18 @@ void parse_nodes(const char *fname,int2char &rank,int2int &parent){
     }
   }
   fprintf(stderr,"\t-> Number of unique names (column1): %lu from file: %s\n",rank.size(),fname);
+
 }
 
 
 int main(int argc, char **argv){
-  const char *htsfile="new.bam";
+  const char *htsfile="CHL_155_12485.sort.bam";
+  //const char *htsfile="asdf.bam";
   const char *as2tax="nucl_gb.accession2taxid.gz";
-  const char *nodes = "nodes.dmp";
-  const char *names = "names.dmp";
-  fprintf(stderr,"\t-> as2fax:%s nodes:%d hts:%s\n",as2tax,nodes,htsfile);
+  const char *nodes = "nodes.dmp.gz";
+  const char *names = "names.dmp.gz";
+  const char *fasta = "tmp.gz";
+  fprintf(stderr,"\t-> as2fax:%s nodes:%d hts:%s names:%s fasta:%s\n\n",as2tax,nodes,htsfile,names,fasta);
   
   samFile *fp_in = hts_open(htsfile,"r"); //open bam file
   bam_hdr_t *bamHdr = sam_hdr_read(fp_in);
@@ -317,8 +379,11 @@ int main(int argc, char **argv){
   int2char name_map = parse_names(names);
   int2char::iterator it = name_map.find(61564);
   assert(it!=name_map.end());
-
-
+  fprintf(stderr,"\t-> Will add some fixes of the ncbi database due to merged names\n");
+  mod_db(mod_in,mod_out,parent,rank,name_map);
+  
   hts(htsfile,i2i,parent,bamHdr,rank,name_map);
+  for(int2int::iterator it=errmap.begin();it!=errmap.end();it++)
+    fprintf(stderr,"err\t%d\t%d\n",it->first,it->second);
   return 0;
 }
