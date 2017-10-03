@@ -12,6 +12,16 @@ int mod_out[]=  {1333996 , 1333996 ,1582270,1914213,1917265,1915309 ,263865,2801
 #include <htslib/hts.h>
 #include <htslib/sam.h>
 #include <vector>
+#include <pthread.h>
+#include <errno.h>
+
+const char *htsfile="CHL_155_12485.sort.bam";
+const char *as2tax="nucl_gb.accession2taxid.gz";
+const char *nodes = "nodes.dmp.gz";
+const char *names = "names.dmp.gz";
+const char *fasta = "tmp.gz";
+
+bam_hdr_t *bamHdr=NULL;
 
 struct cmp_str
 {
@@ -24,6 +34,8 @@ struct cmp_str
 typedef std::map<char *, int, cmp_str> char2int;
 typedef std::map<int,char *> int2char;
 typedef std::map<int,int> int2int;
+
+int2int i2i; //refid to taxid
 
 void mod_db(int *in,int *out,int2int &parent, int2char &rank,int2char &name_map){
   for(int i=0;i<24;i++){
@@ -65,15 +77,9 @@ void strip(char *line){
 
 
 
-
+ 
 int2int ref2tax(const char *fname,bam_hdr_t *hdr ){
-  char2int revmap;
-  for(int i=0;i<hdr->n_targets;i++)
-    revmap[hdr->target_name[i]] = i;
-  fprintf(stderr,"\t-> Number of SQ tags:%d from bamfile: \'%s\'\n",revmap.size());
-
-
-  
+  fprintf(stderr,"\t-> Number of SQ tags:%d from htsfile: \'%d\'\n",hdr->n_targets);
   int2int am;
   gzFile gz= Z_NULL;
   gz=gzopen(fname,"rb");
@@ -91,15 +97,14 @@ int2int ref2tax(const char *fname,bam_hdr_t *hdr ){
     int val = atoi(strtok(NULL,"\t\n "));
 
     //check if the key exists in the bamheader, if not then skip this taxid
-    
-    char2int::iterator it=revmap.find(key);
-    if(it==revmap.end())
+    int valinbam = bam_name2id(hdr,key);
+    if(valinbam==-1)
       continue;
-
-    if(am.find(it->second)!=am.end())
+    
+    if(am.find(valinbam)!=am.end())
       fprintf(stderr,"\t-> Duplicate entries found \'%s\'\n",key);
     else
-      am[it->second] = val;
+      am[valinbam] = val;
 
   }
   fprintf(stderr,"\n");
@@ -210,7 +215,6 @@ void print_chain(FILE *fp,int taxa,int2int &parent,int2char &rank,int2char &name
 void hts(const char *fname,int2int &i2i,int2int& parent,bam_hdr_t *hdr,int2char &rank, int2char &name_map){
   samFile *fp_in = hts_open(fname,"r"); //open bam file
   bam1_t *aln = bam_init1(); //initialize an alignment
-  bam_hdr_t *bamHdr = sam_hdr_read(fp_in)  ;
   int comp ;
 
   char *last=NULL;
@@ -349,33 +353,53 @@ void parse_nodes(const char *fname,int2char &rank,int2int &parent){
 }
 
 
-int main(int argc, char **argv){
-  const char *htsfile="CHL_155_12485.sort.bam";
-  //const char *htsfile="asdf.bam";
-  const char *as2tax="nucl_gb.accession2taxid.gz";
-  const char *nodes = "nodes.dmp.gz";
-  const char *names = "names.dmp.gz";
-  const char *fasta = "tmp.gz";
-  fprintf(stderr,"\t-> as2fax:%s nodes:%d hts:%s names:%s fasta:%s\n\n",as2tax,nodes,htsfile,names,fasta);
-  
+bam_hdr_t *get_bam_hdr_t(const char *htsfile){
+  fprintf(stderr,"\t-> Starting reading header from htsfile:%s\n",htsfile);
   samFile *fp_in = hts_open(htsfile,"r"); //open bam file
-  bam_hdr_t *bamHdr = sam_hdr_read(fp_in);
-  sam_close(fp_in);
+  bam_hdr_t *header =NULL;
+  header=sam_hdr_read(fp_in)  ;
+  assert(header);
+  fprintf(stderr,"\t-> Done reading header from htsfile:%s\n",htsfile);
+  return header;
+}
 
+
+void *ref2tax_thread(void*){
+  fprintf(stderr,"\t-> Parsing huge file\n");
+  i2i = ref2tax(as2tax,bamHdr);
+  fprintf(stderr,"\t-> Done Parsing huge file\n");
+  pthread_exit(NULL);
+}
+
+
+
+int main(int argc, char **argv){
+  pthread_t thread1;
+  fprintf(stderr,"\t-> as2fax:%s nodes:%d hts:%s names:%s fasta:%s\n\n",as2tax,nodes,htsfile,names,fasta);
+  bamHdr = get_bam_hdr_t(htsfile);
+
+ if(pthread_create( &thread1,NULL, ref2tax_thread,NULL)){
+   fprintf(stderr,"[%s] Problem spawning thread\n%s \n",__FUNCTION__,strerror(errno));
+    exit(0);
+  }
+ 
   //map of taxid -> taxid
   int2int parent;
   //map of taxid -> rank
   int2char rank;
   
   //map of bamref ->taxid
-  int2int i2i= ref2tax(as2tax,bamHdr);
+  
   parse_nodes(nodes,rank,parent);
   //map of taxid -> name
   int2char name_map = parse_names(names);
-  int2char::iterator it = name_map.find(61564);
-  assert(it!=name_map.end());
+
   fprintf(stderr,"\t-> Will add some fixes of the ncbi database due to merged names\n");
   mod_db(mod_in,mod_out,parent,rank,name_map);
+
+
+  pthread_join(thread1,NULL);
+
   
   hts(htsfile,i2i,parent,bamHdr,rank,name_map);
   for(int2int::iterator it=errmap.begin();it!=errmap.end();it++)
