@@ -48,5 +48,5 @@ ngsLCA: $(OBJ)
 endif
 
 clean:	
-	rm  -f ngsLCA
+	rm  -f ngsLCA *.o
 
