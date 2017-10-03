@@ -14,14 +14,7 @@ int mod_out[]=  {1333996 , 1333996 ,1582270,1914213,1917265,1915309 ,263865,2801
 #include <vector>
 #include <pthread.h>
 #include <errno.h>
-
-const char *htsfile="CHL_155_12485.sort.bam";
-const char *as2tax="nucl_gb.accession2taxid.gz";
-const char *nodes = "nodes.dmp.gz";
-const char *names = "names.dmp.gz";
-const char *fasta = "tmp.gz";
-
-bam_hdr_t *bamHdr=NULL;
+#include "ngsLCA_cli.h"
 
 struct cmp_str
 {
@@ -31,7 +24,6 @@ struct cmp_str
    }
 };
 
-typedef std::map<char *, int, cmp_str> char2int;
 typedef std::map<int,char *> int2char;
 typedef std::map<int,int> int2int;
 
@@ -220,7 +212,7 @@ void hts(const char *fname,int2int &i2i,int2int& parent,bam_hdr_t *hdr,int2char 
   char *last=NULL;
   std::vector<int> taxids;
   int lca;
-  while(sam_read1(fp_in,bamHdr,aln) > 0){
+  while(sam_read1(fp_in,hdr,aln) > 0){
     char *qname = bam_get_qname(aln);
     int chr = aln->core.tid ; //contig name (chromosome)
 
@@ -364,44 +356,35 @@ bam_hdr_t *get_bam_hdr_t(const char *htsfile){
 }
 
 
-void *ref2tax_thread(void*){
-  fprintf(stderr,"\t-> Parsing huge file\n");
-  i2i = ref2tax(as2tax,bamHdr);
-  fprintf(stderr,"\t-> Done Parsing huge file\n");
-  pthread_exit(NULL);
+void print_ref_rank_species(bam_hdr_t *h,int2int ){
+  
+
 }
 
 
-
 int main(int argc, char **argv){
-  pthread_t thread1;
-  fprintf(stderr,"\t-> as2fax:%s nodes:%d hts:%s names:%s fasta:%s\n\n",as2tax,nodes,htsfile,names,fasta);
-  bamHdr = get_bam_hdr_t(htsfile);
+  pars *p=get_pars(--argc,++argv);
+  print_pars(stderr,p);
+  
+  bam_hdr_t *bamHdr = get_bam_hdr_t(p->htsfile);
 
- if(pthread_create( &thread1,NULL, ref2tax_thread,NULL)){
-   fprintf(stderr,"[%s] Problem spawning thread\n%s \n",__FUNCTION__,strerror(errno));
-    exit(0);
-  }
+  //map of bamref ->taxid
+  int2int i2i = ref2tax(p->acc2taxfile,bamHdr);
  
   //map of taxid -> taxid
   int2int parent;
   //map of taxid -> rank
   int2char rank;
   
-  //map of bamref ->taxid
   
-  parse_nodes(nodes,rank,parent);
+  parse_nodes(p->nodesfile,rank,parent);
   //map of taxid -> name
-  int2char name_map = parse_names(names);
+  int2char name_map = parse_names(p->namesfile);
 
   fprintf(stderr,"\t-> Will add some fixes of the ncbi database due to merged names\n");
   mod_db(mod_in,mod_out,parent,rank,name_map);
 
-
-  pthread_join(thread1,NULL);
-
-  
-  hts(htsfile,i2i,parent,bamHdr,rank,name_map);
+  hts(p->htsfile,i2i,parent,bamHdr,rank,name_map);
   for(int2int::iterator it=errmap.begin();it!=errmap.end();it++)
     fprintf(stderr,"err\t%d\t%d\n",it->first,it->second);
   return 0;
