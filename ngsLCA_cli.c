@@ -12,6 +12,8 @@ pars *pars_init(){
   p->nodesfile= "nodes.dmp.gz";
   p->hts=NULL;
   p->header=NULL;
+  p->editdist=0;
+  p->simscore=1;
   return p;
 }
 
@@ -27,10 +29,12 @@ pars *get_pars(int argc,char **argv){
     char *key=*argv;
     char *val=*(++argv);
     
-    if(!strcasecmp("-bam",val)) p->htsfile=strdup(val);
-    else if(!strcasecmp("-names",val)) p->namesfile=strdup(val);
-    else if(!strcasecmp("-nodes",val)) p->nodesfile=strdup(val);
-    else if(!strcasecmp("-acc2tax",val)) p->acc2taxfile=strdup(val);
+    if(!strcasecmp("-bam",key)) p->htsfile=strdup(val);
+    else if(!strcasecmp("-names",key)) p->namesfile=strdup(val);
+    else if(!strcasecmp("-nodes",key)) p->nodesfile=strdup(val);
+    else if(!strcasecmp("-acc2tax",key)) p->acc2taxfile=strdup(val);
+    else if(!strcasecmp("-editdist",key)) p->editdist=atoi(val);
+    else if(!strcasecmp("-simscore",key)) p->simscore=atof(val);
     else{
       fprintf(stderr,"\t Unknown parameter key:%s val:%s\n",key,val);
       free(p);
@@ -50,6 +54,8 @@ void print_pars(FILE *fp,pars *p){
   fprintf(fp,"\t-> -names\t%s\n",p->namesfile);
   fprintf(fp,"\t-> -nodes\t%s\n",p->nodesfile);
   fprintf(fp,"\t-> -acc2tax\t%s\n",p->acc2taxfile);
+  fprintf(fp,"\t-> -simscore\t%f\n",p->simscore);
+  fprintf(fp,"\t-> -editdist\t%d\n",p->editdist);
 
 }
 

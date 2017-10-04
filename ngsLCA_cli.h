@@ -15,6 +15,9 @@ typedef struct{
   //hts strucutures
   samFile *hts;
   bam_hdr_t *header;
+  //parameters for filtering reads
+  double simscore;
+  int editdist;
 }pars;
 
 

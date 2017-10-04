@@ -71,7 +71,7 @@ void strip(char *line){
 
  
 int2int ref2tax(const char *fname,bam_hdr_t *hdr ){
-  fprintf(stderr,"\t-> Number of SQ tags:%d from htsfile: \'%d\'\n",hdr->n_targets);
+  fprintf(stderr,"\t-> Number of SQ tags:%d \n",hdr->n_targets);
   int2int am;
   gzFile gz= Z_NULL;
   gz=gzopen(fname,"rb");
@@ -81,6 +81,11 @@ int2int ref2tax(const char *fname,bam_hdr_t *hdr ){
   }
   char buf[4096];
   int at=0;
+  FILE *fp = NULL;
+  if(0){
+    fp=fopen("dmp.dmp.deleteme","w");
+    assert(fp);
+  }
   while(gzgets(gz,buf,4096)){
     if(!((at++ %100000 ) ))
        fprintf(stderr,"\r\t-> At linenr: %d in \'%s\'      ",at,fname);
@@ -95,12 +100,17 @@ int2int ref2tax(const char *fname,bam_hdr_t *hdr ){
     
     if(am.find(valinbam)!=am.end())
       fprintf(stderr,"\t-> Duplicate entries found \'%s\'\n",key);
-    else
+    else{
       am[valinbam] = val;
+      if(fp)
+	fprintf(fp,"val\t%s\t%d\tjunk\n",key,val);
+    }
 
   }
   fprintf(stderr,"\n");
   fprintf(stderr,"\t-> [%s] Number of entries to use from accesion to taxid: %lu\n",fname,am.size());
+  if(fp)
+    fclose(fp);
   return am;
 }
 
@@ -127,7 +137,7 @@ int do_lca(std::vector<int> &taxids,int2int &parent){
       return -1;
     }
 
-
+    taxids.clear();
     return taxa;
   }
 
@@ -231,20 +241,19 @@ void hts(samFile *fp_in,int2int &i2i,int2int& parent,bam_hdr_t *hdr,int2char &ra
       last=strdup(qname);
     }
     
-    int2int::iterator it = i2i.find(chr);
+
     //filter by nm
     uint8_t *nm = bam_aux_get(aln,"NM");
     if(nm!=NULL){
       int val = (int) bam_aux2i(nm);
-      // fprintf(stderr,"nm:%d\n",val);
+      //      fprintf(stderr,"nm:%d\n",val);
       if(val>0){
 	continue;
 	fprintf(stderr,"skip: %s\n",last);
       }
     }
 
-
-    
+    int2int::iterator it = i2i.find(chr);
     if(it==i2i.end())
       fprintf(stderr,"\t-> problem finding chrid:%d chrname:%s\n",chr,hdr->target_name[chr]);
     else
@@ -347,11 +356,22 @@ void parse_nodes(const char *fname,int2char &rank,int2int &parent){
 void print_ref_rank_species(bam_hdr_t *h,int2int &i2i,int2char &names,int2char &rank){
   for(int i=0;i<h->n_targets;i++){
     fprintf(stdout,"%d\t%s\t%s\n",i,names[i2i[i]],rank[i2i[i]]);
-
+    
   }
 
 }
 
+int get_species1(int2int &i2i,int2int &parent, int2char &rank){
+
+  
+  
+}
+
+int2int get_species(int2int &i2i,int2int &parent, int2char &rank){
+  int2int ret;
+  
+  return ret;
+}
 
 int main(int argc, char **argv){
   pars *p=get_pars(--argc,++argv);
@@ -365,14 +385,20 @@ int main(int argc, char **argv){
   int2int parent;
   //map of taxid -> rank
   int2char rank;
+  //map of taxid -> name
   int2char name_map = parse_names(p->namesfile);
   parse_nodes(p->nodesfile,rank,parent);
 
+  if(0){
+    print_ref_rank_species(p->header,i2i,name_map,rank);
+    return 0;
+  }
+
+  //closes species (direction of root) for a taxid
+  int2int species=get_species(i2i,parent,rank);
+
+
   
-
-  //map of taxid -> name
-
-
   fprintf(stderr,"\t-> Will add some fixes of the ncbi database due to merged names\n");
   mod_db(mod_in,mod_out,parent,rank,name_map);
 
