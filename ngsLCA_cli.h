@@ -4,11 +4,17 @@
 extern "C" {
 #endif
 
+#include <htslib/sam.h>
+  
 typedef struct{
+  //filenames
   char *htsfile;//bam,cram,sam
   char *nodesfile;
   char *namesfile;
   char *acc2taxfile;
+  //hts strucutures
+  samFile *hts;
+  bam_hdr_t *header;
 }pars;
 
 

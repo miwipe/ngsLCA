@@ -10,7 +10,8 @@ pars *pars_init(){
   p->acc2taxfile="nucl_gb.accession2taxid.gz";
   p->namesfile = "names.dmp.gz";
   p->nodesfile= "nodes.dmp.gz";
-  
+  p->hts=NULL;
+  p->header=NULL;
   return p;
 }
 
@@ -38,7 +39,9 @@ pars *get_pars(int argc,char **argv){
     
     ++argv;
   }
-
+  p->hts = hts_open(p->htsfile,"r");
+  p->header = sam_hdr_read(p->hts);
+  assert(p->header);
   return p;
 }
 
