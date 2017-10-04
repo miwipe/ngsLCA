@@ -205,10 +205,10 @@ void print_chain(FILE *fp,int taxa,int2int &parent,int2char &rank,int2char &name
 }
 
 void hts(const char *fname,int2int &i2i,int2int& parent,bam_hdr_t *hdr,int2char &rank, int2char &name_map){
-  fprintf(stderr,"\t-> [%s]\n",__func__);
+  fprintf(stderr,"\t-> [%s] hdr->n_targets:%d fname:%s\n",__func__,hdr->n_targets,fname);
   samFile *fp_in = NULL;
   fp_in = hts_open(fname,"r"); //open bam file
-  assert(fp_in);
+  assert(fp_in!=NULL);
   bam1_t *aln = bam_init1(); //initialize an alignment
   int comp ;
 
@@ -375,7 +375,11 @@ int main(int argc, char **argv){
   print_pars(stderr,p);
   
   bam_hdr_t *bamHdr = get_bam_hdr_t(p->htsfile);
-
+  bam1_t *aln = bam_init1();
+  samFile *bfile = hts_open(p->htsfile,"r");
+  int ret = sam_read1(bfile,bamHdr,aln);
+  fprintf(stderr,"ret:%d\n");
+  
   //map of bamref ->taxid
 
   int2int i2i;// = ref2tax(p->acc2taxfile,bamHdr);
