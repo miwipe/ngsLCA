@@ -205,14 +205,19 @@ void print_chain(FILE *fp,int taxa,int2int &parent,int2char &rank,int2char &name
 }
 
 void hts(const char *fname,int2int &i2i,int2int& parent,bam_hdr_t *hdr,int2char &rank, int2char &name_map){
-  samFile *fp_in = hts_open(fname,"r"); //open bam file
+  fprintf(stderr,"\t-> [%s]\n",__func__);
+  samFile *fp_in = NULL;
+  fp_in = hts_open(fname,"r"); //open bam file
+  assert(fp_in);
   bam1_t *aln = bam_init1(); //initialize an alignment
   int comp ;
 
   char *last=NULL;
   std::vector<int> taxids;
   int lca;
+  fprintf(stderr,"%d\n",sam_read1(fp_in,hdr,aln));
   while(sam_read1(fp_in,hdr,aln) > 0){
+    fprintf(stderr,"adfadsfadfasdf\n");
     char *qname = bam_get_qname(aln);
     int chr = aln->core.tid ; //contig name (chromosome)
 
@@ -356,8 +361,11 @@ bam_hdr_t *get_bam_hdr_t(const char *htsfile){
 }
 
 
-void print_ref_rank_species(bam_hdr_t *h,int2int ){
-  
+void print_ref_rank_species(bam_hdr_t *h,int2int &i2i,int2char &names,int2char &rank){
+  for(int i=0;i<h->n_targets;i++){
+    fprintf(stdout,"%d\t%s\t%s\n",i,names[i2i[i]],rank[i2i[i]]);
+
+  }
 
 }
 
@@ -369,22 +377,24 @@ int main(int argc, char **argv){
   bam_hdr_t *bamHdr = get_bam_hdr_t(p->htsfile);
 
   //map of bamref ->taxid
-  int2int i2i = ref2tax(p->acc2taxfile,bamHdr);
+
+  int2int i2i;// = ref2tax(p->acc2taxfile,bamHdr);
  
   //map of taxid -> taxid
   int2int parent;
   //map of taxid -> rank
   int2char rank;
-  
+  int2char name_map;// = parse_names(p->namesfile);
+  hts(p->htsfile,i2i,parent,bamHdr,rank,name_map);  
   
   parse_nodes(p->nodesfile,rank,parent);
   //map of taxid -> name
-  int2char name_map = parse_names(p->namesfile);
+
 
   fprintf(stderr,"\t-> Will add some fixes of the ncbi database due to merged names\n");
   mod_db(mod_in,mod_out,parent,rank,name_map);
 
-  hts(p->htsfile,i2i,parent,bamHdr,rank,name_map);
+
   for(int2int::iterator it=errmap.begin();it!=errmap.end();it++)
     fprintf(stderr,"err\t%d\t%d\n",it->first,it->second);
   return 0;
