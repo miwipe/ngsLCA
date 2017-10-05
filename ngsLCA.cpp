@@ -28,6 +28,8 @@ typedef std::map<int,char *> int2char;
 typedef std::map<int,int> int2int;
 
 int2int i2i; //refid to taxid
+int2int specWeight;// Number of reads that map uniquely to a species.
+
 
 void mod_db(int *in,int *out,int2int &parent, int2char &rank,int2char &name_map){
   for(int i=0;i<24;i++){
@@ -88,7 +90,8 @@ int2int ref2tax(const char *fname,bam_hdr_t *hdr ){
   }
   while(gzgets(gz,buf,4096)){
     if(!((at++ %100000 ) ))
-       fprintf(stderr,"\r\t-> At linenr: %d in \'%s\'      ",at,fname);
+      if(isatty(fileno(stderr)))
+	fprintf(stderr,"\r\t-> At linenr: %d in \'%s\'      ",at,fname);
     strtok(buf,"\t\n ");
     char *key =strtok(NULL,"\t\n ");
     int val = atoi(strtok(NULL,"\t\n "));
@@ -214,13 +217,22 @@ void print_chain(FILE *fp,int taxa,int2int &parent,int2char &rank,int2char &name
     fprintf(fp,"\n");
 }
 
-void hts(samFile *fp_in,int2int &i2i,int2int& parent,bam_hdr_t *hdr,int2char &rank, int2char &name_map){
+int isuniq(std::vector<int> &vec){
+  int ret = 1;
+  for(int i=1;i<vec.size();i++)
+    if(vec[0]!=vec[i])
+      return 0;
+  return ret;
+}
+
+void hts(FILE *fp,samFile *fp_in,int2int &i2i,int2int& parent,bam_hdr_t *hdr,int2char &rank, int2char &name_map,int2int &closest_species,FILE *log){
   assert(fp_in!=NULL);
   bam1_t *aln = bam_init1(); //initialize an alignment
   int comp ;
 
   char *last=NULL;
   std::vector<int> taxids;
+  std::vector<int> specs;
   int lca;
   while(sam_read1(fp_in,hdr,aln) > 0){
     char *qname = bam_get_qname(aln);
@@ -233,9 +245,24 @@ void hts(samFile *fp_in,int2int &i2i,int2int& parent,bam_hdr_t *hdr,int2char &ra
 	int size=taxids.size();
 	lca=do_lca(taxids,parent);
 	if(lca!=-1){
-	  fprintf(stdout,"%s:%lu",last,size);fflush(stdout);
-	  print_chain(stdout,lca,parent,rank,name_map);
+	  fprintf(fp,"%s:%lu",last,size);fflush(stdout);
+	  print_chain(fp,lca,parent,rank,name_map);
+	  int varisunique = isuniq(specs);
+	  //fprintf(stderr,"varisunquieu:%d spec.size():%lu\n",varisunique,specs.size());
+	  if(varisunique){
+	    int2int::iterator it=specWeight.find(specs[0]);
+	    //fprintf(stderr,"specs: %d specs.size:%lu wiehg.szei():%lu\n",specs[0],specs.size(),specWeight.size());
+	    if(it==specWeight.end())
+	      specWeight[specs[0]] = specs.size();
+	    else
+	      it->second = it->second +specs.size();
+	    
+	    //fprintf(stderr,"specs.size:%lu wiehg.szei():%lu\n",specs.size(),specWeight.size());
+	  }
+
+
 	}
+	specs.clear();
       }
       free(last);
       last=strdup(qname);
@@ -252,23 +279,33 @@ void hts(samFile *fp_in,int2int &i2i,int2int& parent,bam_hdr_t *hdr,int2char &ra
 	fprintf(stderr,"skip: %s\n",last);
       }
     }
-
     int2int::iterator it = i2i.find(chr);
     if(it==i2i.end())
-      fprintf(stderr,"\t-> problem finding chrid:%d chrname:%s\n",chr,hdr->target_name[chr]);
-    else
+      fprintf(log,"\t-> problem finding chrid:%d chrname:%s\n",chr,hdr->target_name[chr]);
+    else{
       taxids.push_back(it->second);
+      specs.push_back(closest_species[it->second]);
+    }
   }
   if(taxids.size()>0){
     int size=taxids.size();
     if(lca!=-1){
       lca=do_lca(taxids,parent);
       if(lca!=-1){
-	fprintf(stdout,"%s:%lu",last,size);fflush(stdout);
-	print_chain(stdout,lca,parent,rank,name_map);
+	fprintf(fp,"%s:%lu",last,size);fflush(stdout);
+	print_chain(fp,lca,parent,rank,name_map);
+	if(isuniq(specs)){
+	  int2int::iterator it=specWeight.find(specs[0]);
+	  if(it==specWeight.end())
+	    specWeight[specs[0]] = specs.size();
+	  else
+	    it->second = it->second +specs.size();
+
+	}
       }
     }
   }
+  specs.clear();
   bam_destroy1(aln);
   sam_close(fp_in);
   
@@ -361,19 +398,48 @@ void print_ref_rank_species(bam_hdr_t *h,int2int &i2i,int2char &names,int2char &
 
 }
 
-int get_species1(int2int &i2i,int2int &parent, int2char &rank){
-
-  
+int get_species1(int taxa,int2int &parent, int2char &rank){
+  //  fprintf(stderr,"\t-> taxa:%d\n",taxa);
+  int2char::iterator it;
+  while(1){
+    it=rank.find(taxa);
+    if(it==rank.end())
+      return -1;
+    char *val = it->second;
+    if(val==NULL)
+      fprintf(stderr,"taxa:%d\n",taxa);
+    assert(val);
+    if(!strcmp(val,"species"))
+      return taxa;
+    int next = parent[taxa];
+    if(next==taxa)
+      break;
+    taxa=next;
+  }
+  return taxa;
   
 }
 
-int2int get_species(int2int &i2i,int2int &parent, int2char &rank){
+int2int get_species(int2int &i2i,int2int &parent, int2char &rank,int2char &names,FILE *fp){
   int2int ret;
-  
+  for(int2int::iterator it=i2i.begin();it!=i2i.end();it++){
+    //fprintf(stderr,"%d\t%d\n",it->first,it->second);
+    int asdf= get_species1(it->second,parent,rank);
+    if(asdf==-1){
+      fprintf(fp,"\t-> Removing pair(%d,%d) accnumber:%s since doesnt exists in node list\n",it->first,it->second,names[it->second]);
+      i2i.erase(it);
+    }else
+      ret[it->second] = asdf;
+
+  }
   return ret;
 }
 
 int main(int argc, char **argv){
+  if(argc==1){
+    fprintf(stderr,"\t-> ngsLCA -names -nodes -acc2tax -editdist -simscore\n");
+    return 0;
+  }
   pars *p=get_pars(--argc,++argv);
   print_pars(stderr,p);
   
@@ -395,16 +461,21 @@ int main(int argc, char **argv){
   }
 
   //closes species (direction of root) for a taxid
-  int2int species=get_species(i2i,parent,rank);
-
+  int2int closest_species=get_species(i2i,parent,rank,name_map,p->fp3);
+  fprintf(stderr,"\t-> Number of items in closest_species map:%lu\n",closest_species.size());
 
   
   fprintf(stderr,"\t-> Will add some fixes of the ncbi database due to merged names\n");
   mod_db(mod_in,mod_out,parent,rank,name_map);
 
-  hts(p->hts,i2i,parent,p->header,rank,name_map);  
-
+  hts(p->fp1,p->hts,i2i,parent,p->header,rank,name_map,closest_species,p->fp3);  
+  fprintf(stderr,"\t-> Number of species with reads that map uniquely: %lu\n",specWeight.size());
+  
   for(int2int::iterator it=errmap.begin();it!=errmap.end();it++)
-    fprintf(stderr,"err\t%d\t%d\n",it->first,it->second);
+    fprintf(p->fp3,"err\t%d\t%d\n",it->first,it->second);
+
+  for(int2int::iterator it=specWeight.begin();it!=specWeight.end();it++)
+    fprintf(p->fp2,"%d\t%d\n",it->first,it->second);
+  pars_free(p);
   return 0;
 }

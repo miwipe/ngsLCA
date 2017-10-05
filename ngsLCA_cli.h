@@ -18,12 +18,16 @@ typedef struct{
   //parameters for filtering reads
   double simscore;
   int editdist;
+  char *outnames;
+  FILE *fp1;
+  FILE *fp2;
+  FILE *fp3;
 }pars;
 
 
 pars *get_pars(int argc,char **argv);
 void print_pars(FILE *fp,pars *p);
-
+void pars_free(pars *p);
   
 #ifdef __cplusplus
 }
