@@ -253,17 +253,17 @@ void hts(FILE *fp,samFile *fp_in,int2int &i2i,int2int& parent,bam_hdr_t *hdr,int
 	    int2int::iterator it=specWeight.find(specs[0]);
 	    //fprintf(stderr,"specs: %d specs.size:%lu wiehg.szei():%lu\n",specs[0],specs.size(),specWeight.size());
 	    if(it==specWeight.end())
-	      specWeight[specs[0]] = specs.size();
+	      specWeight[specs[0]] = 1;//specs.size();
 	    else
-	      it->second = it->second +specs.size();
+	      it->second = it->second +1;
 	    
 	    //fprintf(stderr,"specs.size:%lu wiehg.szei():%lu\n",specs.size(),specWeight.size());
 	  }
 
 
 	}
-	specs.clear();
       }
+      specs.clear();
       free(last);
       last=strdup(qname);
     }
@@ -300,7 +300,7 @@ void hts(FILE *fp,samFile *fp_in,int2int &i2i,int2int& parent,bam_hdr_t *hdr,int
 	    specWeight[specs[0]] = specs.size();
 	  else
 	    it->second = it->second +specs.size();
-
+	  
 	}
       }
     }
@@ -475,7 +475,7 @@ int main(int argc, char **argv){
     fprintf(p->fp3,"err\t%d\t%d\n",it->first,it->second);
 
   for(int2int::iterator it=specWeight.begin();it!=specWeight.end();it++)
-    fprintf(p->fp2,"%d\t%d\n",it->first,it->second);
+    fprintf(p->fp2,"%d\t%s\t%d\n",it->first,name_map[it->first],it->second);
   pars_free(p);
   return 0;
 }
