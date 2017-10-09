@@ -72,7 +72,7 @@ void strip(char *line){
 
 
  
-int2int ref2tax(const char *fname,bam_hdr_t *hdr ){
+int2int bamRefId2tax(const char *fname,bam_hdr_t *hdr ){
   fprintf(stderr,"\t-> Number of SQ tags:%d \n",hdr->n_targets);
   int2int am;
   gzFile gz= Z_NULL;
@@ -84,7 +84,7 @@ int2int ref2tax(const char *fname,bam_hdr_t *hdr ){
   char buf[4096];
   int at=0;
   FILE *fp = NULL;
-  if(0){
+  if(1){
     fp=fopen("dmp.dmp.deleteme","w");
     assert(fp);
   }
@@ -186,6 +186,10 @@ int do_lca(std::vector<int> &taxids,int2int &parent){
   taxids.clear();
   if(!dist2root.empty())
     return (--dist2root.end())->second;
+  else{
+    fprintf(stderr,"\t-> Happens\n");
+    return -1;
+  }
 }
 
 void print_chain1(FILE *fp,int taxa,int2char &rank,int2char &name_map){
@@ -225,7 +229,44 @@ int isuniq(std::vector<int> &vec){
   return ret;
 }
 
-void hts(FILE *fp,samFile *fp_in,int2int &i2i,int2int& parent,bam_hdr_t *hdr,int2char &rank, int2char &name_map,int2int &closest_species,FILE *log){
+int get_species1(int taxa,int2int &parent, int2char &rank){
+  //  fprintf(stderr,"\t-> taxa:%d\n",taxa);
+  int2char::iterator it;
+  while(1){
+    it=rank.find(taxa);
+    if(it==rank.end())
+      return -1;
+    char *val = it->second;
+    if(val==NULL)
+      fprintf(stderr,"taxa:%d\n",taxa);
+    assert(val);
+    if(!strcmp(val,"species"))
+      return taxa;
+    int next = parent[taxa];
+    if(next==taxa)
+      break;
+    taxa=next;
+  }
+  return taxa;
+  
+}
+
+int2int get_species(int2int &i2i,int2int &parent, int2char &rank,int2char &names,FILE *fp){
+  int2int ret;
+  for(int2int::iterator it=i2i.begin();it!=i2i.end();it++){
+    //fprintf(stderr,"%d\t%d\n",it->first,it->second);
+    int asdf= get_species1(it->second,parent,rank);
+    if(asdf==-1){
+      fprintf(fp,"\t-> Removing pair(%d,%d) accnumber:%s since doesnt exists in node list\n",it->first,it->second,names[it->second]);
+      i2i.erase(it);
+    }else
+      ret[it->second] = asdf;
+
+  }
+  return ret;
+}
+
+void hts(FILE *fp,samFile *fp_in,int2int &i2i,int2int& parent,bam_hdr_t *hdr,int2char &rank, int2char &name_map,FILE *log){
   assert(fp_in!=NULL);
   bam1_t *aln = bam_init1(); //initialize an alignment
   int comp ;
@@ -234,18 +275,20 @@ void hts(FILE *fp,samFile *fp_in,int2int &i2i,int2int& parent,bam_hdr_t *hdr,int
   std::vector<int> taxids;
   std::vector<int> specs;
   int lca;
+  int2int closest_species;
   while(sam_read1(fp_in,hdr,aln) > 0){
     char *qname = bam_get_qname(aln);
     int chr = aln->core.tid ; //contig name (chromosome)
 
     if(last==NULL)
       last=strdup(qname);
-    if(strcmp(last,qname)!=0){
+    //change of ref
+    if(strcmp(last,qname)!=0) {
       if(taxids.size()>0){
 	int size=taxids.size();
 	lca=do_lca(taxids,parent);
 	if(lca!=-1){
-	  fprintf(fp,"%s:%lu",last,size);fflush(stdout);
+	  fprintf(fp,"%s:%d",last,size);fflush(stdout);
 	  print_chain(fp,lca,parent,rank,name_map);
 	  int varisunique = isuniq(specs);
 	  //fprintf(stderr,"varisunquieu:%d spec.size():%lu\n",varisunique,specs.size());
@@ -280,11 +323,26 @@ void hts(FILE *fp,samFile *fp_in,int2int &i2i,int2int& parent,bam_hdr_t *hdr,int
       }
     }
     int2int::iterator it = i2i.find(chr);
-    if(it==i2i.end())
+    //See if cloests speciest exists and plug into closests species
+    int dingdong=-1;
+    if(it!=i2i.end()) {
+      int2int::iterator it2=closest_species.find(chr);
+      if(it2!=closest_species.end())
+	dingdong=it->second;
+      else{
+	dingdong=get_species1(it->second,parent,rank);
+	if(dingdong!=-1)
+	  closest_species[it->second]=dingdong;
+      }
+      //fprintf(stderr,"\t-> closests size:%lu\n",closest_species.size());
+    }
+
+    if(it==i2i.end()||dingdong==-1)
       fprintf(log,"\t-> problem finding chrid:%d chrname:%s\n",chr,hdr->target_name[chr]);
     else{
+            
       taxids.push_back(it->second);
-      specs.push_back(closest_species[it->second]);
+      specs.push_back(dingdong);
     }
   }
   if(taxids.size()>0){
@@ -292,7 +350,7 @@ void hts(FILE *fp,samFile *fp_in,int2int &i2i,int2int& parent,bam_hdr_t *hdr,int
     if(lca!=-1){
       lca=do_lca(taxids,parent);
       if(lca!=-1){
-	fprintf(fp,"%s:%lu",last,size);fflush(stdout);
+	fprintf(fp,"%s:%d",last,size);fflush(stdout);
 	print_chain(fp,lca,parent,rank,name_map);
 	if(isuniq(specs)){
 	  int2int::iterator it=specWeight.find(specs[0]);
@@ -398,54 +456,60 @@ void print_ref_rank_species(bam_hdr_t *h,int2int &i2i,int2char &names,int2char &
 
 }
 
-int get_species1(int taxa,int2int &parent, int2char &rank){
-  //  fprintf(stderr,"\t-> taxa:%d\n",taxa);
-  int2char::iterator it;
-  while(1){
-    it=rank.find(taxa);
-    if(it==rank.end())
-      return -1;
-    char *val = it->second;
-    if(val==NULL)
-      fprintf(stderr,"taxa:%d\n",taxa);
-    assert(val);
-    if(!strcmp(val,"species"))
-      return taxa;
-    int next = parent[taxa];
-    if(next==taxa)
-      break;
-    taxa=next;
-  }
-  return taxa;
-  
-}
-
-int2int get_species(int2int &i2i,int2int &parent, int2char &rank,int2char &names,FILE *fp){
+int calc_valens(int2int &i2i, int2int &parent){
   int2int ret;
   for(int2int::iterator it=i2i.begin();it!=i2i.end();it++){
-    //fprintf(stderr,"%d\t%d\n",it->first,it->second);
-    int asdf= get_species1(it->second,parent,rank);
-    if(asdf==-1){
-      fprintf(fp,"\t-> Removing pair(%d,%d) accnumber:%s since doesnt exists in node list\n",it->first,it->second,names[it->second]);
-      i2i.erase(it);
-    }else
-      ret[it->second] = asdf;
-
+    int2int::iterator pit=parent.find(it->second);
+    if(pit==parent.end()||pit->second==1)
+      continue;
+    //    fprintf(stdout,"%d %d\n",pit->first,pit->second);
+    int2int::iterator rit=ret.find(pit->second);
+    if(rit==ret.end())
+      ret[pit->second]=1;
+    else
+      rit->second = rit->second +1;
   }
-  return ret;
+
+  for(int2int::iterator it=ret.begin();it!=ret.end();it++)
+    fprintf(stdout,"%d\t%d\n",it->first,it->second);
+  return 0;
 }
+
+
+
+int calc_dist2root(int2int &i2i, int2int &parent){
+  int2int ret;
+  for(int2int::iterator it=i2i.begin();it!=i2i.end();it++){
+    int2int::iterator pit=parent.find(it->second);
+    if(pit==parent.end()||pit->second==1)
+      continue;
+    //    fprintf(stdout,"%d %d\n",pit->first,pit->second);
+    int2int::iterator rit=ret.find(pit->second);
+    if(rit==ret.end())
+      ret[pit->second]=1;
+    else
+      rit->second = rit->second +1;
+  }
+
+  for(int2int::iterator it=ret.begin();it!=ret.end();it++)
+    fprintf(stdout,"%d\t%d\n",it->first,it->second);
+  return 0;
+}
+
+
 
 int main(int argc, char **argv){
   if(argc==1){
-    fprintf(stderr,"\t-> ngsLCA -names -nodes -acc2tax -editdist -simscore\n");
+    fprintf(stderr,"\t-> ngsLCA -names -nodes -acc2tax [-editdist -simscore] -bam \n");
     return 0;
   }
+  time_t t2=time(NULL);
   pars *p=get_pars(--argc,++argv);
   print_pars(stderr,p);
   
   //map of bamref ->taxid
 
-  int2int i2i= ref2tax(p->acc2taxfile,p->header);
+  int2int i2i= bamRefId2tax(p->acc2taxfile,p->header);
  
   //map of taxid -> taxid
   int2int parent;
@@ -454,21 +518,21 @@ int main(int argc, char **argv){
   //map of taxid -> name
   int2char name_map = parse_names(p->namesfile);
   parse_nodes(p->nodesfile,rank,parent);
-
+  calc_valens(i2i,parent);
   if(0){
     print_ref_rank_species(p->header,i2i,name_map,rank);
     return 0;
   }
 
   //closes species (direction of root) for a taxid
-  int2int closest_species=get_species(i2i,parent,rank,name_map,p->fp3);
-  fprintf(stderr,"\t-> Number of items in closest_species map:%lu\n",closest_species.size());
+  //  int2int closest_species=get_species(i2i,parent,rank,name_map,p->fp3);
+  //  fprintf(stderr,"\t-> Number of items in closest_species map:%lu\n",closest_species.size());
 
   
   fprintf(stderr,"\t-> Will add some fixes of the ncbi database due to merged names\n");
   mod_db(mod_in,mod_out,parent,rank,name_map);
 
-  hts(p->fp1,p->hts,i2i,parent,p->header,rank,name_map,closest_species,p->fp3);  
+  hts(p->fp1,p->hts,i2i,parent,p->header,rank,name_map,p->fp3);  
   fprintf(stderr,"\t-> Number of species with reads that map uniquely: %lu\n",specWeight.size());
   
   for(int2int::iterator it=errmap.begin();it!=errmap.end();it++)
@@ -477,5 +541,6 @@ int main(int argc, char **argv){
   for(int2int::iterator it=specWeight.begin();it!=specWeight.end();it++)
     fprintf(p->fp2,"%d\t%s\t%d\n",it->first,name_map[it->first],it->second);
   pars_free(p);
+  fprintf(stderr, "\t-> [ALL done] walltime used =  %.2f sec\n", (float)(time(NULL) - t2));  
   return 0;
 }

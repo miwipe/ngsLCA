@@ -44,6 +44,7 @@ pars *get_pars(int argc,char **argv){
     else if(!strcasecmp("-editdist",key)) p->editdist=atoi(val);
     else if(!strcasecmp("-simscore",key)) p->simscore=atof(val);
     else if(!strcasecmp("-outnames",key)) p->outnames=strdup(val);
+    else if(!strcasecmp("-out",key)) p->outnames=strdup(val);
     else{
       fprintf(stderr,"\t Unknown parameter key:%s val:%s\n",key,val);
       free(p);
@@ -81,7 +82,7 @@ void print_pars(FILE *fp,pars *p){
   fprintf(fp,"\t-> -acc2tax\t%s\n",p->acc2taxfile);
   fprintf(fp,"\t-> -simscore\t%f\n",p->simscore);
   fprintf(fp,"\t-> -editdist\t%d\n",p->editdist);
-  fprintf(fp,"\t-> -outnames\t%d\n",p->outnames);
+  fprintf(fp,"\t-> -outnames\t%s\n",p->outnames);
 
 }
 
