@@ -24,9 +24,18 @@ struct cmp_str
    }
 };
 
+typedef struct{
+  int up;
+  std::vector<int> down;
+  int dist2root;
+}node;
+
+
+
+
 typedef std::map<int,char *> int2char;
 typedef std::map<int,int> int2int;
-
+typedef std::map<int,node> int2node;
 int2int i2i; //refid to taxid
 int2int specWeight;// Number of reads that map uniquely to a species.
 
@@ -495,6 +504,24 @@ int calc_dist2root(int2int &i2i, int2int &parent){
     fprintf(stdout,"%d\t%d\n",it->first,it->second);
   return 0;
 }
+#if 0
+int2node makeNodes(int2int &parent){
+  int2node ret;
+  for(int2int::iterator it=parent.begin();it!=parent.end();it++){
+    int2node::iterator it2=ret.find(it->second);
+    if(it2==ret.end()){
+      node nd;
+      nd.up=it->second;
+      ret[it->first] = nd;
+    }
+    
+  }
+
+  
+  return ret;
+}
+#endif
+
 
 
 
