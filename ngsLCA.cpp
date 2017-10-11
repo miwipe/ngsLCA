@@ -14,28 +14,9 @@ int mod_out[]=  {1333996 , 1333996 ,1582270,1914213,1917265,1915309 ,263865,2801
 #include <vector>
 #include <pthread.h>
 #include <errno.h>
+#include "ngsLCA.h"
 #include "ngsLCA_cli.h"
-
-struct cmp_str
-{
-   bool operator()(char const *a, char const *b)
-   {
-      return std::strcmp(a, b) < 0;
-   }
-};
-
-typedef struct{
-  int up;
-  std::vector<int> down;
-  int dist2root;
-}node;
-
-
-
-
-typedef std::map<int,char *> int2char;
-typedef std::map<int,int> int2int;
-typedef std::map<int,node> int2node;
+#include "ngsLCA_format.h"
 int2int i2i; //refid to taxid
 int2int specWeight;// Number of reads that map uniquely to a species.
 
@@ -556,6 +537,10 @@ int main(int argc, char **argv){
     fprintf(stderr,"\t-> ngsLCA -names -nodes -acc2tax [-editdist -simscore] -bam \n");
     return 0;
   }
+#if 0
+  int2int ww = get_weight(argv[1]);
+  return 0;
+#endif
   time_t t2=time(NULL);
   pars *p=get_pars(--argc,++argv);
   print_pars(stderr,p);
