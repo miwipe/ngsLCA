@@ -136,6 +136,15 @@ int nodes2root(int taxa,int2int &parent){
   return dist;
 }
 
+int2int dist2root;
+
+
+int satan(int taxid,int2int &parant){
+  int2int::iterator it=dist2root.find(taxid);
+  
+  return 0;
+}
+
 
 
 int do_lca(std::vector<int> &taxids,int2int &parent){
@@ -275,12 +284,25 @@ int2int get_species(int2int &i2i,int2int &parent, int2char &rank,int2char &names
   return ret;
 }
 
+char *make_seq(bam1_t *aln){
+  int len = aln->core.l_qseq;
+  char *qseq = new char[len+1];
+  uint8_t *q = bam_get_seq(aln);
+  for(int i=0; i< len ; i++)
+    qseq[i] = seq_nt16_str[bam_seqi(q,i)];
+  qseq[len]='\0';
+  //  fprintf(stderr,"seq:%s\n",qseq);
+  //exit(0);
+  return qseq;
+}
+
 void hts(FILE *fp,samFile *fp_in,int2int &i2i,int2int& parent,bam_hdr_t *hdr,int2char &rank, int2char &name_map,FILE *log){
   assert(fp_in!=NULL);
   bam1_t *aln = bam_init1(); //initialize an alignment
   int comp ;
 
   char *last=NULL;
+  char *seq =NULL;
   std::vector<int> taxids;
   std::vector<int> specs;
   int lca;
@@ -289,15 +311,17 @@ void hts(FILE *fp,samFile *fp_in,int2int &i2i,int2int& parent,bam_hdr_t *hdr,int
     char *qname = bam_get_qname(aln);
     int chr = aln->core.tid ; //contig name (chromosome)
 
-    if(last==NULL)
+    if(last==NULL){
       last=strdup(qname);
+      seq=make_seq(aln);
+    }
     //change of ref
     if(strcmp(last,qname)!=0) {
       if(taxids.size()>0){
 	int size=taxids.size();
 	lca=do_lca(taxids,parent);
 	if(lca!=-1){
-	  fprintf(fp,"%s:%d",last,size);fflush(stdout);
+	  fprintf(fp,"%s:%s:%d",last,seq,size);fflush(stdout);
 	  print_chain(fp,lca,parent,rank,name_map);
 	  int varisunique = isuniq(specs);
 	  //fprintf(stderr,"varisunquieu:%d spec.size():%lu\n",varisunique,specs.size());
@@ -317,7 +341,9 @@ void hts(FILE *fp,samFile *fp_in,int2int &i2i,int2int& parent,bam_hdr_t *hdr,int
       }
       specs.clear();
       free(last);
+      delete [] seq;
       last=strdup(qname);
+      seq=make_seq(aln);
     }
     
 
@@ -359,7 +385,7 @@ void hts(FILE *fp,samFile *fp_in,int2int &i2i,int2int& parent,bam_hdr_t *hdr,int
     if(lca!=-1){
       lca=do_lca(taxids,parent);
       if(lca!=-1){
-	fprintf(fp,"%s:%d",last,size);fflush(stdout);
+	fprintf(fp,"%s:%s:%d",last,seq,size);fflush(stdout);
 	print_chain(fp,lca,parent,rank,name_map);
 	if(isuniq(specs)){
 	  int2int::iterator it=specWeight.find(specs[0]);
@@ -545,7 +571,7 @@ int main(int argc, char **argv){
   //map of taxid -> name
   int2char name_map = parse_names(p->namesfile);
   parse_nodes(p->nodesfile,rank,parent);
-  calc_valens(i2i,parent);
+  //  calc_valens(i2i,parent);
   if(0){
     print_ref_rank_species(p->header,i2i,name_map,rank);
     return 0;
