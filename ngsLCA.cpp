@@ -542,6 +542,9 @@ int main(int argc, char **argv){
   return 0;
 #endif
   time_t t2=time(NULL);
+  if(argc>1&&!strcasecmp(argv[1],"format")){
+    return ngsLCA_format(--argc,++argv);
+  }
   pars *p=get_pars(--argc,++argv);
   print_pars(stderr,p);
   
