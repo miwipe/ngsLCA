@@ -288,7 +288,7 @@ void hts(FILE *fp,samFile *fp_in,int2int &i2i,int2int& parent,bam_hdr_t *hdr,int
   std::vector<int> specs;
   int lca;
   int2int closest_species;
-  while(sam_read1(fp_in,hdr,aln) > 0){
+  while(sam_read1(fp_in,hdr,aln) > 0) {
     char *qname = bam_get_qname(aln);
     int chr = aln->core.tid ; //contig name (chromosome)
 
@@ -302,7 +302,8 @@ void hts(FILE *fp,samFile *fp_in,int2int &i2i,int2int& parent,bam_hdr_t *hdr,int
 	int size=taxids.size();
 	lca=do_lca(taxids,parent);
 	if(lca!=-1){
-	  fprintf(fp,"%s:%s:%d",last,seq,size);fflush(stdout);
+	  fprintf(fp,"%s:%s:%lu:%d",last,seq,strlen(seq),size);//fprintf(stderr,"size:%d\n");
+	  //	  fprintf(stderr,"adfsadfsafafdad: %d size\n",size);
 	  print_chain(fp,lca,parent,rank,name_map);
 	  int varisunique = isuniq(specs);
 	  //fprintf(stderr,"varisunquieu:%d spec.size():%lu\n",varisunique,specs.size());
