@@ -22,6 +22,8 @@ typedef struct{
   FILE *fp1;
   FILE *fp2;
   FILE *fp3;
+  int minmapq;
+  int discard; //or bitoperation with the flag of the read
 }pars;
 
 

@@ -277,7 +277,7 @@ char *make_seq(bam1_t *aln){
   return qseq;
 }
 
-void hts(FILE *fp,samFile *fp_in,int2int &i2i,int2int& parent,bam_hdr_t *hdr,int2char &rank, int2char &name_map,FILE *log){
+void hts(FILE *fp,samFile *fp_in,int2int &i2i,int2int& parent,bam_hdr_t *hdr,int2char &rank, int2char &name_map,FILE *log,int minmapq,int discard){
   assert(fp_in!=NULL);
   bam1_t *aln = bam_init1(); //initialize an alignment
   int comp ;
@@ -291,7 +291,11 @@ void hts(FILE *fp,samFile *fp_in,int2int &i2i,int2int& parent,bam_hdr_t *hdr,int
   while(sam_read1(fp_in,hdr,aln) > 0) {
     char *qname = bam_get_qname(aln);
     int chr = aln->core.tid ; //contig name (chromosome)
-
+    if(aln->core.qual<minmapq)
+      continue;
+    if(discard>0&&(aln->core.flag|discard))
+      continue;
+      
     if(last==NULL){
       last=strdup(qname);
       seq=make_seq(aln);
@@ -535,7 +539,7 @@ int2node makeNodes(int2int &parent){
 
 int main(int argc, char **argv){
   if(argc==1){
-    fprintf(stderr,"\t-> ngsLCA -names -nodes -acc2tax [-editdist -simscore] -bam \n");
+    fprintf(stderr,"\t-> ngsLCA -names -nodes -acc2tax [-editdist -simscore -minmapq -discard] -bam \n");
     return 0;
   }
 #if 0
@@ -574,7 +578,7 @@ int main(int argc, char **argv){
   fprintf(stderr,"\t-> Will add some fixes of the ncbi database due to merged names\n");
   mod_db(mod_in,mod_out,parent,rank,name_map);
 
-  hts(p->fp1,p->hts,i2i,parent,p->header,rank,name_map,p->fp3);  
+  hts(p->fp1,p->hts,i2i,parent,p->header,rank,name_map,p->fp3,p->minmapq,p->discard);  
   fprintf(stderr,"\t-> Number of species with reads that map uniquely: %lu\n",specWeight.size());
   
   for(int2int::iterator it=errmap.begin();it!=errmap.end();it++)

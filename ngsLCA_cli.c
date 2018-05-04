@@ -7,7 +7,7 @@
 pars *pars_init(){
   pars *p =(pars*) calloc(1,sizeof(pars));
   p->htsfile = "CHL_155_12485.sort.bam";
- p->acc2taxfile="nucl_gb.accession2taxid.gz";
+  p->acc2taxfile="nucl_gb.accession2taxid.gz";
   p->namesfile = "names.dmp.gz";
   p->nodesfile= "nodes.dmp.gz";
   p->hts=NULL;
@@ -16,6 +16,8 @@ pars *pars_init(){
   p->simscore=1;
   p->fp1=p->fp2=p->fp3=NULL;
   p->outnames="outnames";
+  p->minmapq=0;
+  p->discard=516;//discard unmapped and read fail
   return p;
 }
 
@@ -42,9 +44,10 @@ pars *get_pars(int argc,char **argv){
     else if(!strcasecmp("-nodes",key)) p->nodesfile=strdup(val);
     else if(!strcasecmp("-acc2tax",key)) p->acc2taxfile=strdup(val);
     else if(!strcasecmp("-editdist",key)) p->editdist=atoi(val);
+    else if(!strcasecmp("-minmapq",key)) p->minmapq=atoi(val);
     else if(!strcasecmp("-simscore",key)) p->simscore=atof(val);
     else if(!strcasecmp("-outnames",key)) p->outnames=strdup(val);
-    else if(!strcasecmp("-out",key)) p->outnames=strdup(val);
+    else if(!strcasecmp("-discard",key)) p->discard=atoi(val);
     else{
       fprintf(stderr,"\t Unknown parameter key:%s val:%s\n",key,val);
       free(p);
@@ -83,6 +86,7 @@ void print_pars(FILE *fp,pars *p){
   fprintf(fp,"\t-> -simscore\t%f\n",p->simscore);
   fprintf(fp,"\t-> -editdist\t%d\n",p->editdist);
   fprintf(fp,"\t-> -outnames\t%s\n",p->outnames);
+  fprintf(fp,"\t-> -minmapq\t%s\n",p->minmapq);
 
 }
 
