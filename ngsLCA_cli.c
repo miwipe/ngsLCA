@@ -47,6 +47,7 @@ pars *get_pars(int argc,char **argv){
     else if(!strcasecmp("-minmapq",key)) p->minmapq=atoi(val);
     else if(!strcasecmp("-simscore",key)) p->simscore=atof(val);
     else if(!strcasecmp("-outnames",key)) p->outnames=strdup(val);
+    else if(!strcasecmp("-out",key)) p->outnames=strdup(val);
     else if(!strcasecmp("-discard",key)) p->discard=atoi(val);
     else{
       fprintf(stderr,"\t Unknown parameter key:%s val:%s\n",key,val);
@@ -86,7 +87,7 @@ void print_pars(FILE *fp,pars *p){
   fprintf(fp,"\t-> -simscore\t%f\n",p->simscore);
   fprintf(fp,"\t-> -editdist\t%d\n",p->editdist);
   fprintf(fp,"\t-> -outnames\t%s\n",p->outnames);
-  fprintf(fp,"\t-> -minmapq\t%s\n",p->minmapq);
+  fprintf(fp,"\t-> -minmapq\t%d\n",p->minmapq);
 
 }
 

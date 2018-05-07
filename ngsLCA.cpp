@@ -291,11 +291,16 @@ void hts(FILE *fp,samFile *fp_in,int2int &i2i,int2int& parent,bam_hdr_t *hdr,int
   while(sam_read1(fp_in,hdr,aln) > 0) {
     char *qname = bam_get_qname(aln);
     int chr = aln->core.tid ; //contig name (chromosome)
-    if(aln->core.qual<minmapq)
+    //    fprintf(stderr,"%d %d\n",aln->core.qual,minmapq);
+    if(aln->core.qual<minmapq){
+      fprintf(stderr,"discarding due to low mapq");
       continue;
-    if(discard>0&&(aln->core.flag|discard))
+    }
+    //    fprintf(stderr,"Discard: %d coreflag:%d OR %d\n",discard,aln->core.flag,aln->core.flag&discard);
+    if(discard>0&&(aln->core.flag&discard)){
+      fprintf(stderr,"Discardding due to core flag\n");
       continue;
-      
+    }
     if(last==NULL){
       last=strdup(qname);
       seq=make_seq(aln);
