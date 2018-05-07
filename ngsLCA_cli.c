@@ -12,8 +12,10 @@ pars *pars_init(){
   p->nodesfile= "nodes.dmp.gz";
   p->hts=NULL;
   p->header=NULL;
-  p->editdist=0;
-  p->simscore=1;
+  p->editdistMin=0;
+  p->editdistMax=4;
+  p->simscoreLow=0;
+  p->simscoreHigh=1;
   p->fp1=p->fp2=p->fp3=NULL;
   p->outnames="outnames";
   p->minmapq=0;
@@ -43,9 +45,11 @@ pars *get_pars(int argc,char **argv){
     else if(!strcasecmp("-names",key)) p->namesfile=strdup(val);
     else if(!strcasecmp("-nodes",key)) p->nodesfile=strdup(val);
     else if(!strcasecmp("-acc2tax",key)) p->acc2taxfile=strdup(val);
-    else if(!strcasecmp("-editdist",key)) p->editdist=atoi(val);
+    else if(!strcasecmp("-editdistMin",key)) p->editdistMin=atoi(val);
+    else if(!strcasecmp("-editdistMax",key)) p->editdistMax=atoi(val);
     else if(!strcasecmp("-minmapq",key)) p->minmapq=atoi(val);
-    else if(!strcasecmp("-simscore",key)) p->simscore=atof(val);
+    else if(!strcasecmp("-simscoreLow",key)) p->simscoreLow=atof(val);
+    else if(!strcasecmp("-simscoreHigh",key)) p->simscoreHigh=atof(val);
     else if(!strcasecmp("-outnames",key)) p->outnames=strdup(val);
     else if(!strcasecmp("-out",key)) p->outnames=strdup(val);
     else if(!strcasecmp("-discard",key)) p->discard=atoi(val);
@@ -84,8 +88,10 @@ void print_pars(FILE *fp,pars *p){
   fprintf(fp,"\t-> -names\t%s\n",p->namesfile);
   fprintf(fp,"\t-> -nodes\t%s\n",p->nodesfile);
   fprintf(fp,"\t-> -acc2tax\t%s\n",p->acc2taxfile);
-  fprintf(fp,"\t-> -simscore\t%f\n",p->simscore);
-  fprintf(fp,"\t-> -editdist\t%d\n",p->editdist);
+  fprintf(fp,"\t-> -simscoreLow\t%f\n",p->simscoreLow);
+  fprintf(fp,"\t-> -simscoreHigh\t%f\n",p->simscoreHigh);
+  fprintf(fp,"\t-> -editdistMin\t%d\n",p->editdistMin);
+  fprintf(fp,"\t-> -editdistMax\t%d\n",p->editdistMax);
   fprintf(fp,"\t-> -outnames\t%s\n",p->outnames);
   fprintf(fp,"\t-> -minmapq\t%d\n",p->minmapq);
 

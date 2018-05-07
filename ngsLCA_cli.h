@@ -16,8 +16,10 @@ typedef struct{
   samFile *hts;
   bam_hdr_t *header;
   //parameters for filtering reads
-  double simscore;
-  int editdist;
+  double simscoreLow;
+  double simscoreHigh;
+  int editdistMin;
+  int editdistMax;
   char *outnames;
   FILE *fp1;
   FILE *fp2;

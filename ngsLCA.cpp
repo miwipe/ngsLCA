@@ -277,7 +277,7 @@ char *make_seq(bam1_t *aln){
   return qseq;
 }
 
-void hts(FILE *fp,samFile *fp_in,int2int &i2i,int2int& parent,bam_hdr_t *hdr,int2char &rank, int2char &name_map,FILE *log,int minmapq,int discard){
+void hts(FILE *fp,samFile *fp_in,int2int &i2i,int2int& parent,bam_hdr_t *hdr,int2char &rank, int2char &name_map,FILE *log,int minmapq,int discard,int editMin, int editMax, double scoreLow,double scoreHigh){
   assert(fp_in!=NULL);
   bam1_t *aln = bam_init1(); //initialize an alignment
   int comp ;
@@ -337,16 +337,19 @@ void hts(FILE *fp,samFile *fp_in,int2int &i2i,int2int& parent,bam_hdr_t *hdr,int
       seq=make_seq(aln);
     }
     
-
+    
     //filter by nm
     uint8_t *nm = bam_aux_get(aln,"NM");
     if(nm!=NULL){
       int val = (int) bam_aux2i(nm);
       //      fprintf(stderr,"nm:%d\n",val);
-      if(val>0){
+      if(val<editMin||val>editMax){
 	continue;
-	fprintf(stderr,"skip: %s\n",last);
       }
+      double seqlen=aln->core.l_qseq;
+      double myscore=1.0-(((double) val)/seqlen);
+      if(myscore<scoreLow||myscore>scoreHigh)
+	continue;
     }
     int2int::iterator it = i2i.find(chr);
     //See if cloests speciest exists and plug into closests species
@@ -544,7 +547,7 @@ int2node makeNodes(int2int &parent){
 
 int main(int argc, char **argv){
   if(argc==1){
-    fprintf(stderr,"\t-> ngsLCA -names -nodes -acc2tax [-editdist -simscore -minmapq -discard] -bam \n");
+    fprintf(stderr,"\t-> ngsLCA -names -nodes -acc2tax [-editdist[min/max] -simscore[low/high] -minmapq -discard] -bam \n");
     return 0;
   }
 #if 0
@@ -583,7 +586,7 @@ int main(int argc, char **argv){
   fprintf(stderr,"\t-> Will add some fixes of the ncbi database due to merged names\n");
   mod_db(mod_in,mod_out,parent,rank,name_map);
 
-  hts(p->fp1,p->hts,i2i,parent,p->header,rank,name_map,p->fp3,p->minmapq,p->discard);  
+  hts(p->fp1,p->hts,i2i,parent,p->header,rank,name_map,p->fp3,p->minmapq,p->discard,p->editdistMin,p->editdistMax,p->simscoreLow,p->simscoreHigh);  
   fprintf(stderr,"\t-> Number of species with reads that map uniquely: %lu\n",specWeight.size());
   
   for(int2int::iterator it=errmap.begin();it!=errmap.end();it++)
