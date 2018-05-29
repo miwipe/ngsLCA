@@ -288,6 +288,7 @@ void hts(FILE *fp,samFile *fp_in,int2int &i2i,int2int& parent,bam_hdr_t *hdr,int
   std::vector<int> specs;
   int lca;
   int2int closest_species;
+  int skip=0;
   while(sam_read1(fp_in,hdr,aln) > 0) {
     char *qname = bam_get_qname(aln);
     int chr = aln->core.tid ; //contig name (chromosome)
@@ -307,7 +308,7 @@ void hts(FILE *fp,samFile *fp_in,int2int &i2i,int2int& parent,bam_hdr_t *hdr,int
     }
     //change of ref
     if(strcmp(last,qname)!=0) {
-      if(taxids.size()>0){
+      if(taxids.size()>0&&skip==0){
 	int size=taxids.size();
 	lca=do_lca(taxids,parent);
 	if(lca!=-1){
@@ -330,6 +331,7 @@ void hts(FILE *fp,samFile *fp_in,int2int &i2i,int2int& parent,bam_hdr_t *hdr,int
 
 	}
       }
+      skip=0;
       specs.clear();
       free(last);
       delete [] seq;
@@ -344,12 +346,15 @@ void hts(FILE *fp,samFile *fp_in,int2int &i2i,int2int& parent,bam_hdr_t *hdr,int
       int val = (int) bam_aux2i(nm);
       //      fprintf(stderr,"nm:%d\n",val);
       if(val<editMin||val>editMax){
+	skip=1;
 	continue;
       }
       double seqlen=aln->core.l_qseq;
       double myscore=1.0-(((double) val)/seqlen);
-      if(myscore<scoreLow||myscore>scoreHigh)
+      if(myscore<scoreLow||myscore>scoreHigh){
+	skip=1;
 	continue;
+      }
     }
     int2int::iterator it = i2i.find(chr);
     //See if cloests speciest exists and plug into closests species
@@ -374,7 +379,7 @@ void hts(FILE *fp,samFile *fp_in,int2int &i2i,int2int& parent,bam_hdr_t *hdr,int
       specs.push_back(dingdong);
     }
   }
-  if(taxids.size()>0){
+  if(taxids.size()>0&&skip==0){
     int size=taxids.size();
     if(lca!=-1){
       lca=do_lca(taxids,parent);
