@@ -345,14 +345,19 @@ void hts(FILE *fp,samFile *fp_in,int2int &i2i,int2int& parent,bam_hdr_t *hdr,int
     if(nm!=NULL){
       int val = (int) bam_aux2i(nm);
       //      fprintf(stderr,"nm:%d\n",val);
-      if(val<editMin||val>editMax){
+      if(val<editMin){
+	skip=1;
+	continue;
+      }else if(val>editMax)
+	continue;
+
+      double seqlen=aln->core.l_qseq;
+      double myscore=1.0-(((double) val)/seqlen);
+      if(myscore<scoreLow){
 	skip=1;
 	continue;
       }
-      double seqlen=aln->core.l_qseq;
-      double myscore=1.0-(((double) val)/seqlen);
-      if(myscore<scoreLow||myscore>scoreHigh){
-	skip=1;
+      else if(myscore>scoreHigh){
 	continue;
       }
     }
