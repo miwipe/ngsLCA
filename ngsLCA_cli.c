@@ -13,7 +13,7 @@ pars *pars_init(){
   p->hts=NULL;
   p->header=NULL;
   p->editdistMin=0;
-  p->editdistMax=4;
+  p->editdistMax=10;
   p->simscoreLow=0;
   p->simscoreHigh=1;
   p->fp1=p->fp2=p->fp3=NULL;

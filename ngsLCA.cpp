@@ -278,6 +278,7 @@ char *make_seq(bam1_t *aln){
 }
 
 void hts(FILE *fp,samFile *fp_in,int2int &i2i,int2int& parent,bam_hdr_t *hdr,int2char &rank, int2char &name_map,FILE *log,int minmapq,int discard,int editMin, int editMax, double scoreLow,double scoreHigh){
+  fprintf(stderr,"\t-> editMin:%d editmMax:%d scoreLow:%f scoreHigh:%f\n",editMin,editMax,scoreLow,scoreHigh);
   assert(fp_in!=NULL);
   bam1_t *aln = bam_init1(); //initialize an alignment
   int comp ;
@@ -289,6 +290,7 @@ void hts(FILE *fp,samFile *fp_in,int2int &i2i,int2int& parent,bam_hdr_t *hdr,int
   int lca;
   int2int closest_species;
   int skip=0;
+  int inc=0;
   while(sam_read1(fp_in,hdr,aln) > 0) {
     char *qname = bam_get_qname(aln);
     int chr = aln->core.tid ; //contig name (chromosome)
@@ -344,20 +346,25 @@ void hts(FILE *fp,samFile *fp_in,int2int &i2i,int2int& parent,bam_hdr_t *hdr,int
     uint8_t *nm = bam_aux_get(aln,"NM");
     if(nm!=NULL){
       int val = (int) bam_aux2i(nm);
-      //      fprintf(stderr,"nm:%d\n",val);
+      //      fprintf(stderr,"[%d] nm:%d\t",inc++,val);
       if(val<editMin){
 	skip=1;
+	//fprintf(stderr,"skipped1\n");
 	continue;
-      }else if(val>editMax)
+      }else if(val>editMax){
+	//fprintf(stderr,"continued1\n");
 	continue;
-
+      }
       double seqlen=aln->core.l_qseq;
       double myscore=1.0-(((double) val)/seqlen);
-      if(myscore<scoreLow){
+      //      fprintf(stderr," score:%f\t",myscore);
+      if(myscore>scoreHigh){
+	//fprintf(stderr,"skipped2\n");
 	skip=1;
 	continue;
       }
-      else if(myscore>scoreHigh){
+      else if(myscore<scoreLow){	
+	//	fprintf(stderr,"continued2\n");
 	continue;
       }
     }
