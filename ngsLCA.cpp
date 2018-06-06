@@ -13,6 +13,7 @@ int mod_out[]=  {1333996 , 1333996 ,1582270,1914213,1917265,1915309 ,263865,2801
 #include <htslib/sam.h>
 #include <vector>
 #include <pthread.h>
+#include <algorithm>
 #include <errno.h>
 #include "ngsLCA.h"
 #include "ngsLCA_cli.h"
@@ -74,7 +75,7 @@ int2int bamRefId2tax(const char *fname,bam_hdr_t *hdr ){
   char buf[4096];
   int at=0;
   FILE *fp = NULL;
-  if(1){
+  if(0){
     fp=fopen("dmp.dmp.deleteme","w");
     assert(fp);
   }
@@ -277,6 +278,23 @@ char *make_seq(bam1_t *aln){
   return qseq;
 }
 
+int printonce=1;
+
+std::vector<int> purge(std::vector<int> &taxids,std::vector<int> &editdist){
+  if(printonce==1)
+    fprintf(stderr,"\t-> purging taxids oldsize:%lu\n",taxids.size());
+  assert(taxids.size()==editdist.size());
+  std::vector<int> tmpnewvec;
+  int mylow = *std::min_element(editdist.begin(),editdist.end());
+  for(int i=0;i<taxids.size();i++)
+    if(editdist[i]<=mylow)
+      tmpnewvec.push_back(taxids[i]);
+  if(printonce--==1)
+    fprintf(stderr,"\t-> purging taxids newsize:%lu this info is only printed once\n",tmpnewvec.size());
+  return tmpnewvec;
+}
+
+
 void hts(FILE *fp,samFile *fp_in,int2int &i2i,int2int& parent,bam_hdr_t *hdr,int2char &rank, int2char &name_map,FILE *log,int minmapq,int discard,int editMin, int editMax, double scoreLow,double scoreHigh){
   fprintf(stderr,"\t-> editMin:%d editmMax:%d scoreLow:%f scoreHigh:%f\n",editMin,editMax,scoreLow,scoreHigh);
   assert(fp_in!=NULL);
@@ -287,6 +305,7 @@ void hts(FILE *fp,samFile *fp_in,int2int &i2i,int2int& parent,bam_hdr_t *hdr,int
   char *seq =NULL;
   std::vector<int> taxids;
   std::vector<int> specs;
+  std::vector<int> editdist;
   int lca;
   int2int closest_species;
   int skip=0;
@@ -311,7 +330,12 @@ void hts(FILE *fp,samFile *fp_in,int2int &i2i,int2int& parent,bam_hdr_t *hdr,int
     //change of ref
     if(strcmp(last,qname)!=0) {
       if(taxids.size()>0&&skip==0){
+	//	fprintf(stderr,"length of taxids:%lu and other:%lu minedit:%d\n",taxids.size(),editdist.size(),*std::min_element(editdist.begin(),editdist.end()));
+	
 	int size=taxids.size();
+	if(editMin==-1&&editMax==-1)
+	  taxids = purge(taxids,editdist);
+
 	lca=do_lca(taxids,parent);
 	if(lca!=-1){
 	  fprintf(fp,"%s:%s:%lu:%d",last,seq,strlen(seq),size);//fprintf(stderr,"size:%d\n");
@@ -335,6 +359,7 @@ void hts(FILE *fp,samFile *fp_in,int2int &i2i,int2int& parent,bam_hdr_t *hdr,int
       }
       skip=0;
       specs.clear();
+      editdist.clear();
       free(last);
       delete [] seq;
       last=strdup(qname);
@@ -344,19 +369,20 @@ void hts(FILE *fp,samFile *fp_in,int2int &i2i,int2int& parent,bam_hdr_t *hdr,int
     
     //filter by nm
     uint8_t *nm = bam_aux_get(aln,"NM");
+    int thiseditdist;
     if(nm!=NULL){
-      int val = (int) bam_aux2i(nm);
+      thiseditdist = (int) bam_aux2i(nm);
       //      fprintf(stderr,"[%d] nm:%d\t",inc++,val);
-      if(val<editMin){
+      if(editMin!=-1&&thiseditdist<editMin){
 	skip=1;
 	//fprintf(stderr,"skipped1\n");
 	continue;
-      }else if(val>editMax){
+      }else if(editMax!=-1&&thiseditdist>editMax){
 	//fprintf(stderr,"continued1\n");
 	continue;
       }
       double seqlen=aln->core.l_qseq;
-      double myscore=1.0-(((double) val)/seqlen);
+      double myscore=1.0-(((double) thiseditdist)/seqlen);
       //      fprintf(stderr," score:%f\t",myscore);
       if(myscore>scoreHigh){
 	//fprintf(stderr,"skipped2\n");
@@ -389,11 +415,17 @@ void hts(FILE *fp,samFile *fp_in,int2int &i2i,int2int& parent,bam_hdr_t *hdr,int
             
       taxids.push_back(it->second);
       specs.push_back(dingdong);
+      editdist.push_back(thiseditdist);
+      //fprintf(stderr,"it-.second:%d specs:%d thiseditdist:%d\n",it->second,dingdong,thiseditdist);
+      //      fprintf(stderr,"EDIT\t%d\n",thiseditdist);
     }
   }
   if(taxids.size()>0&&skip==0){
     int size=taxids.size();
     if(lca!=-1){
+      if(editMin==-1&&editMax==-1)
+	taxids = purge(taxids,editdist);
+      
       lca=do_lca(taxids,parent);
       if(lca!=-1){
 	fprintf(fp,"%s:%s:%d",last,seq,size);fflush(stdout);
@@ -410,6 +442,7 @@ void hts(FILE *fp,samFile *fp_in,int2int &i2i,int2int& parent,bam_hdr_t *hdr,int
     }
   }
   specs.clear();
+  editdist.clear();
   bam_destroy1(aln);
   sam_close(fp_in);
   
