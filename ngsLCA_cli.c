@@ -25,7 +25,7 @@ pars *pars_init(){
 
 void pars_free(pars *p){
   fclose(p->fp1);
-  fclose(p->fp2);
+  //fclose(p->fp2);
   fclose(p->fp3);
   free(p);
 }
@@ -74,7 +74,7 @@ pars *get_pars(int argc,char **argv){
 
   snprintf(buf,1024,"%s.wlca",p->outnames);
   fprintf(stderr,"\t-> Will output lca weight in file:\t\t\'%s\'\n",buf);
-  p->fp2 = fopen(buf,"wb");
+  //  p->fp2 = fopen(buf,"wb");
 
   snprintf(buf,1024,"%s.log",p->outnames);
   fprintf(stderr,"\t-> Will output log info (problems) in file:\t\'%s\'\n",buf);
