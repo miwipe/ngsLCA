@@ -642,7 +642,7 @@ int main(int argc, char **argv){
   for(int2int::iterator it=errmap.begin();it!=errmap.end();it++)
     fprintf(p->fp3,"err\t%d\t%d\n",it->first,it->second);
 
-  for(int2int::iterator it=specWeight.begin();it!=specWeight.end();it++)
+  for(int2int::iterator it=specWeight.begin();0&&it!=specWeight.end();it++)
     fprintf(p->fp2,"%d\t%s\t%d\n",it->first,name_map[it->first],it->second);
   pars_free(p);
   fprintf(stderr, "\t-> [ALL done] walltime used =  %.2f sec\n", (float)(time(NULL) - t2));  
