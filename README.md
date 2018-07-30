@@ -3,6 +3,6 @@
 
 # Installation
 
-#Running Main c/c++ program
+# Running Main c/c++ program
 
-#Visualizing results using R
+# Visualizing results using R
