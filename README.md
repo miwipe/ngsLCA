@@ -9,5 +9,7 @@ git clone https://github.com/miwipe/ngsLCA
 cd htslib;make;cd ../ngsLCA;make HTSSRC=../htslib
 
 # Running Main c/c++ program
+## Finding resource files for program from NCBI
+## Running ngsLCA
 
 # Visualizing results using R
