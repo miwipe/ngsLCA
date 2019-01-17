@@ -20,6 +20,7 @@ int mod_out[]=  {1333996 , 1333996 ,1582270,1914213,1917265,1915309 ,263865,2801
 #include "ngsLCA_format.h"
 int2int i2i; //refid to taxid
 int2int specWeight;// Number of reads that map uniquely to a species.
+int2int i2i_missing;//contains counter of missing hits for each taxid that doesnt exists in acc2taxid
 
 
 void mod_db(int *in,int *out,int2int &parent, int2char &rank,int2char &name_map){
@@ -409,9 +410,14 @@ void hts(FILE *fp,samFile *fp_in,int2int &i2i,int2int& parent,bam_hdr_t *hdr,int
       //fprintf(stderr,"\t-> closests size:%lu\n",closest_species.size());
     }
 
-    if(it==i2i.end()||dingdong==-1)
-      fprintf(log,"\t-> problem finding chrid:%d chrname:%s\n",chr,hdr->target_name[chr]);
-    else{
+    if(it==i2i.end()||dingdong==-1){
+      int2int::iterator it2missing = i2i_missing.find(chr);
+      if(it2missing==i2i_missing.end()){
+	fprintf(log,"\t-> problem finding chrid:%d chrname:%s\n",chr,hdr->target_name[chr]);
+	i2i_missing[chr] = 1;
+      }else
+	it2missing->second = it2missing->second + 1;
+    }else{
             
       taxids.push_back(it->second);
       specs.push_back(dingdong);
@@ -641,6 +647,8 @@ int main(int argc, char **argv){
   
   for(int2int::iterator it=errmap.begin();it!=errmap.end();it++)
     fprintf(p->fp3,"err\t%d\t%d\n",it->first,it->second);
+  for(int2int::iterator it=errmap.begin();it!=errmap.end();it++)
+    fprintf(p->fp3,"missingtaxid \t%d\t%d\t%s\n",it->first,it->second,p->header[it->first]);
 
   for(int2int::iterator it=specWeight.begin();0&&it!=specWeight.end();it++)
     fprintf(p->fp2,"%d\t%s\t%d\n",it->first,name_map[it->first],it->second);
