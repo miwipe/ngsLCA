@@ -434,7 +434,7 @@ void hts(FILE *fp,samFile *fp_in,int2int &i2i,int2int& parent,bam_hdr_t *hdr,int
       
       lca=do_lca(taxids,parent);
       if(lca!=-1){
-	fprintf(fp,"%s:%s:%d",last,seq,size);fflush(stdout);
+	fprintf(fp,"%s:%s:%lu:%d",last,seq,strlen(seq),size);
 	print_chain(fp,lca,parent,rank,name_map);
 	if(isuniq(specs)){
 	  int2int::iterator it=specWeight.find(specs[0]);
