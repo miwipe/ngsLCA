@@ -616,7 +616,10 @@ int main(int argc, char **argv){
   }
   pars *p=get_pars(--argc,++argv);
   print_pars(stderr,p);
-  
+  fprintf(p->fp1,"#");
+  for(int i=0;i<argc;i++)
+    fprintf(p->fp1," %s",argv[i]);
+  fprintf(p->fp1,"\n");
   //map of bamref ->taxid
 
   int2int i2i= bamRefId2tax(p->acc2taxfile,p->header);
