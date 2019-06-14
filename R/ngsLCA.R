@@ -1,24 +1,24 @@
-######################################
-######################################
-#This R script is for downstream processing of ngsLAC output datasets
-#Developed and tested in R version 3.5.1
-#Require all lca files copied into a working directory as imputs
-#Then move blank control lca files into a directory named "blanks" under the working directory
-#lca file names are recomanded to be as "sample_info.lca", e.g. "age.lca" (8500BP.lca) or "location.lca" (NZ_103.lca)
-################
+###############################
+#This R script processes and visualizes outputs from ngsLCA 
+#Developed and tested in R version 3.5.1 under unix
+#Description can be found at https://github.com/miwipe/ngsLCA
+#Please report bugs and/or suggestions to ycwang@snm.ku.dk or wyc661217@gmail.com
 
 
-################
+########## Important ##########
+#As input, this script requires
+# 1) all lca files (.lca) copied into a working directory
+# 2) and negetive control lca files moved into a sub-directory named "blanks" under the working directory.
+# A metadata text (sample names, ages, locations, etc.) is optional as input. If provided, the reletive metadata will be illustrated in the results instead of file names
+# see https://github.com/miwipe/ngsLCA for an example of metadata format
+
+
+###############################
 #install and request R packages
-################
-if (!require("devtools")) install.packages("devtools")
-if (!require("vegan") | !require("gplots") | !require("ComplexHeatmap") | !require("reshape") | !require("analogue")) {
-  install.packages("vegan")
-  install.packages("gplots")
-  devtools::install_github("jokergoo/ComplexHeatmap")
-  install.packages("reshape")
-  install.packages("analogue")
-}
+#this step might require manually handling for the first running
+
+cat("\n ->  loading R libraries \n\n")
+library(devtools)
 library(vegan)
 library(gplots)
 library(ComplexHeatmap)
@@ -26,168 +26,240 @@ library(circlize)
 library(reshape)
 library(RColorBrewer)
 library(analogue)
+library(readr)
 
 
-################
-#1
-#Define variables
-################
-rm(list=(ls())) #clean up Global Environment, optional
-Path = "/Path/to/your/working/directory/" #The path to working directory
-Path = "/Users/yuchengwang/Desktop/ngsLCA_test/"
-Thr1 = 2 #for each sample, lowest reads number representing a taxa that considered to be authentic
-Thr2 = 5 #for combined sample taxonomic profile, lowest summed reads number representing a taxa that considered to be authentic
-Taxa.re = c("1:root","33090:Viridiplantae", "50451:Arabis", "71240:eudicotyledons", "3398:Magnoliophyta")
-#A manually edited taxa list that will be removed from sample taxa profile because it is, 
-#1) a empirical contamination taxa
-#or 2) a taxa that has no damage signal
-#or 3) a high taxanomic unit having no sence ecologically
-#taxa in the list MUST be the same format as in sample taxa profile ("taxID:name")
-Sample.re = c() #fill in lca file names if any that the sample will be removed from final taxa profile
-group.name = c("2:Bacteria", "33630:Alveolata", "33682:Euglenozoa", "4751:Fungi", "33208:Metazoa", 
-               "33090:Viridiplantae", "10239:Viruses") #taxonomic unit names that will be used for grouping taxa
-Taxa.level = "genus" #taxonomic level that will be used for clustering taxa profile for heatmap
+#if (!require("devtools", quietly=T)) {
+  #install.packages("devtools")
+#}
 
 
-################
-#2
-#Data read in and pre-process
-################
-#function for data read in and remove taxa represented by 
-#reads NO. less than pre-setting threshold in each sample, then merged into one table
-ReadIn = function(FileList, Blank){
-  DF1 = data.frame(taxa=character(), stringsAsFactors=F)
-  if(Blank){
-    PathF = paste(Path, "blanks/", sep="")
-  } else{
-    PathF = Path
+
+#if (!require("vegan", quietly=T) | 
+  #  !require("gplots", quietly=T) | 
+   # !require("ComplexHeatmap", quietly=T) | 
+    #!require("circlize", quietly=T) | 
+    #!require("reshape", quietly=T) | 
+#    !require("RColorBrewer", quietly=T) | 
+#    !require("analogue", quietly=T) | 
+#    !require("readr",quietly=T)) {
+  
+#  install.packages("vegan")
+#  install.packages("gplots")
+#  devtools::install_github("jokergoo/ComplexHeatmap")
+#  install.packages("circlize")
+#  install.packages("reshape")
+#  install.packages("RColorBrewer")
+#  install.packages("analogue")
+#  install.packages("readr")
+  
+#}
+
+
+###############################
+#0
+#arguments read-in
+rm(list=(ls())) #clean up global environment
+options(warn=-1) #turn off Warning messages
+
+l<-commandArgs(TRUE)
+
+getArgs<-function(x,l){
+  unlist(strsplit(grep(paste("^",x,"=",sep=""),l,val=T),"="))[2]
+}
+
+
+Args<-function(l,args){
+  if(! all(sapply(strsplit(l,"="),function(x)x[1])%in%names(args))){
+    cat("Error -> ",l[!sapply(strsplit(l,"="),function(x)x[1])%in%names(args)]," is not a valid argument\n")
+    q("no")
   }
-  for (i in 1:length(FileList)) { 
-    DF2 = read.csv(paste(PathF, FileList[i], sep=""), header=F, sep="\n", stringsAsFactors=F)
-    for (j in 1:dim(DF2)[1]) {
-      DF2[j,1] = paste(strsplit(DF2[j,1], "\t")[[1]][-1], collapse=",")
-    }
-    DF2$count = rep(1, dim(DF2)[1])
+  arguments<-list()
+  for(a in names(args))
+    arguments[[a]]<-getArgs(a,l)
+  
+  if(any(!names(args)%in%names(arguments)&sapply(args,is.null))){
+    cat("Error -> ",names(args)[!names(args)%in%names(arguments)&sapply(args,is.null)]," is not optional!\n")
+    q("no")
+  }
+  for(a in names(args))
+    if(is.null(arguments[[a]]))
+      arguments[[a]]<-args[[match(a,names(args))]]
+  
+  arguments
+}
+
+print.args<-function(args,des){
+  if(missing(des)){
+    des<-as.list(rep("",length(args)))
+    names(des)<-names(args)
+  }
+  cat("->  Needed arguments:\n")
+  mapply(function(x)cat("\t",x,":",des[[x]],"\n"),cbind(names(args)[sapply(args,is.null)]))
+  cat("->  Optional arguments (defaults):\n")
+  mapply(function(x)cat("\t",x," (",args[[x]],")",":",des[[x]],"\n"),cbind(names(args)[!sapply(args,is.null)]))
+  q("no")
+}
+
+#NULL is an non-optional argument – please fill, NA is an optional argument, others are the default arguments
+args<-list(
+  path = NULL,
+  func = c("NMDS", "group", "rarefy", "heatmap"),
+  metadata = NA,
+  thr1 = 2,
+  thr2 = 5,
+  taxa.re = c("1:root","33090:Viridiplantae", "71240:eudicotyledons", "3398:Magnoliophyta"),
+  sample.re = NA,
+  group.name = c("2:Bacteria", "33630:Alveolata", "33682:Euglenozoa", "4751:Fungi", "33208:Metazoa", "33090:Viridiplantae", "10239:Viruses") ,
+  top.abundance = 100
+)
+
+##if no argument are given this will print the needed arguments and the default settings for the optional arguments
+des<-list(
+  path = "working directory contains all lca fiels",
+  func = "\n\t\tfunctions that will be applied",
+  metadata = "a comma separated file with first column for file names and second column for corresponding metadata, an example at https://github.com/miwipe/ngsLCA",
+  thr1 = "minimum reads number representing a taxa that considered to be authentic for each sample",
+  thr2 = "minimum summed reads number representing a taxa that considered to be authentic across all samples",
+  taxa.re = "\n\t\t high taxonomic ranks and empirical contamination taxa that will be removed",
+  sample.re = "file names that will be removed from final taxa profile",
+  group.name = "\n\t\t taxonomic unit names that will be used for grouping taxa, format is taxID:scientific name",
+  top.abundance = "number of abundant taxa illustrated in figs"
+)
+
+
+#Load arguments and add it to workspace
+if(length(l)==0) print.args(args,des)
+attach(Args(l,args))
+args <- commandArgs(TRUE)
+if(length(args)==0){
+  cat(" Arguments: output prefix\n")
+  q("no")
+}
+
+
+cat("path = ", path,"\n")
+cat("func = ", func,"\n")
+cat("metadata = ", metadata,"\n")
+cat("thr1 = ", thr1,"\n")  
+cat("thr2 = ", thr2,"\n")
+cat("taxa.re = ", taxa.re,"\n")
+cat("sample.re = ", sample.re,"\n")
+cat("group.name = ", group.name,"\n")
+cat("top.abundance = ", top.abundance,"\n")
+
+
+######################################
+######################################
+#define all functions
+
+#lca file read-in, merging, counting and filtering
+ReadIn = function(FileList, Blank){
+  
+  DF1 = data.frame(taxa=character(), stringsAsFactors=F)
+  
+  if(Blank){
+    pathF = paste(path, "blanks/", sep="")
+  } else{
+    pathF = path
+  }
+  
+  for (i in 1:length(FileList)) {
+    DF2.1 =  read.csv(paste(pathF, FileList[i], sep=""), header=F, sep="\t", stringsAsFactors=F, fill=T, col.names = paste0("V",seq_len(60)))
+     if(dim(DF2.1)[1]>0){
+    DF2 = matrix(nrow=dim(DF2.1)[1],ncol=2)
+    DF2[,2] = rep(1, dim(DF2.1)[1])
+    DF2=as.data.frame(DF2)
+    DF2[,1] = DF2.1[,2]
     DF3 = aggregate(DF2[,2]~DF2[,1], data=DF2, FUN=sum) #count reads NO. for each taxa
-    DF4 = subset(DF3, DF3[ ,2] >= Thr1) 
+    DF4 = subset(DF3, DF3[ ,2] >= thr1) 
     colnames(DF4)=c("taxa", FileList[i])
     DF1 = merge(DF1, DF4, by="taxa", all=T)
+      }
   }
+  
   DF1[is.na(DF1)] = 0
+  
   for(i in 2:length(colnames(DF1))) #remove the ".lca" in column names
   {
     colnames(DF1)[i] = sub(".lca", "", colnames(DF1)[i])
   }
+
+  #Removes rows with mistakes
+  DF2 = DF1[,-1]
+  X1 = 0
+  for(i in 1:dim(DF2)[1])
+  {
+    if(any(is.na(as.numeric(DF2[i,]))))
+    {
+      X1 = c(X1, i)
+    }
+  }
+  
+  if (length(X1)>1) {
+    X1 = X1[-1]
+    DF1 = DF1[-X1,]
+  }
+  
   return(DF1)
 }
-#samples and coontrols read in seperately, might take some time depending on file number and size
-file.list1 = dir(Path, pattern = ".lca") #list sample lca files
-X1.1 = ReadIn(FileList = file.list1, Blank = F)
-file.list2 = dir(paste(Path, "blanks/",sep = ""), pattern = ".lca") #list control lca files
-X1.2 = ReadIn(FileList = file.list2, Blank = T)
-#merge samples and controls, produce full taxonomic branch for each taxa
-X1 = merge(X1.1, X1.2, by="taxa", all=T)
-X1[is.na(X1)] = 0
-X2 = data.frame(matrix(ncol = 35, nrow = 0), stringsAsFactors=F)
-for (i in 1:dim(X1)[1]) {
-  X3 = strsplit(X1[i,1], ",")[[1]]
-  X2[i,] = c(X3, rep(NA, 35-length(X3)))
-}
-dir.create(paste(Path, "results", sep=""))
-write.table(X2, file = paste(Path, "results/", "taxa_branch.txt", sep=""), quote=F, 
-            row.names=F, col.names=T, sep=",")
-#extract the lowest taxonomic unit for each taxa
-ExtacTaxa = function(DF){
-  for (i in 1:dim(DF)[1]) {
-    DF[i,1] = paste(strsplit(DF[i,1], ":")[[1]][1:2], collapse=":")
+
+#concatenate 2 dataframes
+concatenate <- function(DF1, DF2) {
+  d1.names <- names(DF1)
+  d2.names <- names(DF2)
+  d2.add <- setdiff(d1.names, d2.names)
+  d1.add <- setdiff(d2.names, d1.names)
+  
+  if(length(d2.add) > 0) {
+    for(i in 1:length(d2.add)) {
+      DF2[d2.add[i]] <- NA
+    }
   }
-  return(DF)
-}
-#write combined taxonomic profile for samples and controls
-write.table(ExtacTaxa(X1), file = paste(Path, "results/", "taxa_profile(with_controls).txt", sep=""), quote=F, 
-            row.names=F, col.names=T, sep=",")
-#write combined taxonomic profile for samples
-write.table(ExtacTaxa(X1.1), file = paste(Path, "results/", "taxa_profile.txt", sep=""), quote=F, 
-            row.names=F, col.names=T, sep=",")
-#write potential contamination list
-write.table(ExtacTaxa(X1.2), file = paste(Path, "results/", "contambation_list.txt", sep=""), quote=F, 
-            row.names=F, col.names=T, sep=",")
-
-
-################
-#3
-#filter and clean up sample taxonomic profile 
-################
-X1 = read.csv(paste(Path, "results/", "taxa_profile.txt", sep=""), quote="", stringsAsFactors=F)
-cont.list = read.csv(paste(Path, "results/", "contambation_list.txt", sep=""), quote="", stringsAsFactors=F)
-#remove taxa in contamanation list
-X2 = X1[-which(X1$taxa %in% cont.list$taxa),]
-#remove lower representing taxa
-X3 = X2[,-1]
-X4 = 0
-for(i in 1:dim(X3)[1])
-{
-  if(sum(X3[i,]) >= Thr2)
-  {
-    X4 = c(X4, i)
+  
+  if(length(d1.add) > 0) {
+    for(i in 1:length(d1.add)) {
+      DF1[d1.add[i]] <- NA
+    }
   }
+  
+  return(rbind(DF1, DF2))
 }
-X4 = X4[-1]
-X5 = X2[X4,]
-#remove taxa in the Taxa.re list
-X6 = X5[!(X5$taxa %in% Taxa.re),]
-#remove samples in the sample removing list
-X7 = X6[,!(colnames(X6) %in% Sample.re)]
-write.table(X7, file = paste(Path, "results/", "clean_taxa_profile.txt", sep=""), quote=F, 
-            row.names=F, col.names=T, sep=",")
 
-
-################
-#4
-#NMDS on complete taxa profile
-################
-dir.create(paste(Path, "results/NMDS", sep=""))
-#function for NMDS, pure numeric dataframe imputing required
-NMDSc = function(DF, OutName){
-  NMDS.dimention = as.integer((pmin(dim(DF)[1],dim(DF)[2])-1)/2)+1 #caculate the NMDS dimerntion
-  if (NMDS.dimention >= 2) {
-    NMDS = metaMDS(DF, k=NMDS.dimention, trymax=100) #NMDS cluster
-    #output NMDS_stressplot figure
-    pdf(paste(Path, "results/NMDS/", OutName, "_NMDS_stressplot.pdf", sep=""), width=12, height=12) 
-    stressplot(NMDS)
-    dev.off()
-    #output NMDS figure
-    pdf(paste(Path, "results/NMDS/", OutName, "_NMDS.pdf", sep=""), width=12, height=12) 
-    ordiplot(NMDS$points, type="n", xlab = "NMDS1", ylab = "NMDS2")
-    points(as.data.frame(NMDS$species), pch=1, cex=3, col="black")
-    orditorp(NMDS,display="species",air=0.01)
-    dev.off()
+#taxa profile read-in and pre-process, replacing file names with corresponding metadata in the merged table
+datain = function(metadata, full){
+  
+  if(full){
+    X1 = read.csv(paste(path, "results/intermediate/", "taxa_profile(with_controls).txt", sep=""), sep=";", quote="", stringsAsFactors=F, check.names=F)
   } else {
-    print(paste(OutName, "Number of samples or taxa is less than 2, insufficient for NMDS",sep = " ::: "))
+    X1 = read.csv(paste(path, "results/intermediate/", "clean_taxa_profile.txt", sep=""), sep=";", quote="", stringsAsFactors=F, check.names=F)
   }
+  
+  row.names(X1) = X1[,1]
+  X1 = X1[,-1]
+  
+  if(!is.na(metadata)){
+    
+    Mdata = read.csv(metadata, quote="", stringsAsFactors=F, header=F)
+    Mdata[,1] = sub(".lca", "", Mdata[,1])
+    
+    if(any(!colnames(X1)%in%Mdata[,1])){
+      cat("\n\n\n Error ->   the supplied metadata file does not cover all inputing files, please notice that the controls in \"blanks\" also require supplied metadata")
+      q("no")
+    }
+    
+    #Reordering the dataset
+    Mdata.1 = Mdata[which(Mdata[,1]%in%colnames(X1)),]
+    X1 = X1[,c(Mdata.1[,1])]
+    colnames(X1) = Mdata.1[,2]
+  }
+  
+  return(X1)
+  
 }
-#based on non-filtered profile containing samples and controls, might take some time depending on size of dataset, optional
-X1 = read.csv(paste(Path, "results/", "taxa_profile(with_controls).txt", sep=""), quote="", stringsAsFactors=F)
-row.names(X1) = X1[,1]
-X1 = X1[,-1]
-NMDSc(DF = X1, OutName = "complete_NMDS(withControls)")
-#based on clean sample taxa profile 
-X1 = read.csv(paste(Path, "results/", "clean_taxa_profile.txt", sep=""), quote="", stringsAsFactors=F)
-row.names(X1) = X1[,1]
-X1 = X1[,-1]
-NMDSc(DF = X1, OutName = "complete_NMDS")
 
-
-################
-#5
-#Devide the cleaned taxa profile into groups then NMDS on each group
-################
-dir.create(paste(Path, "results/groups", sep=""))
-X1 = read.csv(paste(Path, "results/", "clean_taxa_profile.txt", sep=""), quote="", stringsAsFactors=F)
-tax.branch = read.csv(paste(Path, "results/", "taxa_branch.txt", sep=""), quote="", stringsAsFactors=F)
-#function for NMDS clustering
-#function for taxa grouping
-GroupTaxa = function(DF, TaxaUnit){
+#group taxa into the user defiened groups
+GroupTaxa = function(DF, TaxaUnit, metadata){
   L1 = NULL
   L1[group.name] = list(NULL)
   for (i in 1:dim(DF)[1]) {
@@ -200,182 +272,517 @@ GroupTaxa = function(DF, TaxaUnit){
   for (i in 1:length(L1)) {
     if (length(L1[[i]]) != 0) {
       DF1 = DF[L1[[i]],]
-      write.table(DF1, file = paste(Path, "results/groups/", names(L1)[i], ".taxa.txt", sep=""), quote=F, 
-                  row.names=F, col.names=T, sep=",")
-      row.names(DF1) = DF1[,1]
-      DF1 = DF1[,-1]
-      NMDSc(DF = DF1, OutName = names(L1)[i])
+      write.table(DF1, file = paste(path, "results/taxa_groups/", names(L1)[i], ".taxa.txt", sep=""), quote=F, 
+                  row.names=F, col.names=T, sep="\t")
     }
   }
 }
-##
-GroupTaxa(DF = X1, TaxaUnit = group.name)
 
 
-################
-#6 
-#Rarefaction
-################
-dir.create(paste(Path, "results/rarefy", sep=""))
-#function for rarefaction
+#Function for clustering taxa into user-defined taxa ranks
+Taxa.cluster = function(DF, OutName){
+  
+  DF1 = data.frame(matrix(vector(), 0, dim(DF)[2]+1, dimnames=list(c(), c("taxa",colnames(DF)))),stringsAsFactors=F)
+  colnames(DF1)[2:dim(DF1)[2]] = colnames(DF)
+  
+  j=1
+  for (i in 1:dim(DF)[1]) {
+    
+    V1 = grep(Taxa.L, tax.branch[grep(rownames(DF)[i], tax.branch[,1]),])
+    if (length(V1)>1) {
+      V1=V1[1]
+    }
+    
+    if (length(V1) !=0) {
+      V2 = strsplit(tax.branch[grep(rownames(DF)[i], tax.branch[,1]),V1],":")[[1]][2]
+      DF1[j,] = c(V2,DF[i,1:dim(DF)[2]])
+      j = j+1
+    }
+  }
+  
+  if (dim(DF1)[1] != 0) {
+    
+    DF2 = aggregate(. ~ taxa, data = DF1, sum)
+    write.table(DF2, file = paste(path, "results/taxa_ranks/", OutName, "_",taxa.level, ".txt", sep=""), quote=F, 
+                row.names=F, col.names=T, sep="\t")
+    
+  } else {
+    cat("\n ->  ", OutName, ":::no taxa clustered into specific taxa ranks, omitted  \n")
+  }
+}
+
+#function for NMDS
+NMDSc = function(DF, OutName){
+  
+  NMDS.dimention = as.integer((pmin(dim(DF)[1],dim(DF)[2])-1)/2)+1 #caculate the NMDS dimerntion
+  
+  if (NMDS.dimention >= 2) {
+    NMDS = metaMDS(DF, k=NMDS.dimention, trymax=100) #NMDS cluster
+    #output NMDS_stressplot figure
+    pdf(paste(path, "results/NMDS/", OutName, "_NMDS_stressplot.pdf", sep=""), width=12, height=12) 
+    stressplot(NMDS)
+    dev.off()
+    #output NMDS figure
+    pdf(paste(path, "results/NMDS/", OutName, "_NMDS.pdf", sep=""), width=12, height=12) 
+    ordiplot(NMDS$points, type="n", xlab = "NMDS1", ylab = "NMDS2")
+    points(as.data.frame(NMDS$species), pch=1, cex=3, col="black")
+    orditorp(NMDS,display="species",air=0.01)
+    dev.off()
+  } else {
+    cat("\n\n ->  ", OutName, ":::Number of samples or taxa is less than 2, insufficient for NMDS \n\n")
+  }
+}
+
+
+#Function for rarefaction
 Raref = function(DF, OutName){
+  
   if (pmin(dim(DF)[1],dim(DF)[2]) >= 2) {
+    
     DF1 = t(DF[,-1])
     S = specnumber(DF1) # observed number of taxa
     raremax = min(rowSums(DF1))
     Srare = rarefy(DF1, raremax)
     #
-    pdf(paste(Path, "results/rarefy/", OutName, "_rarefy_scaling.pdf", sep=""), width=12, height=8) 
-    plot(S, Srare, xlab = "Observed No. of Species", ylab = "Rarefied No. of Species")
+    pdf(paste(path, "results/rarefy/", OutName, "_rarefy_scaling.pdf", sep=""), width=12, height=8) 
+    plot(S, Srare, xlab = "Observed No. of taxa", ylab = "Rarefied No. of taxa")
     abline(0, 1)
     dev.off()
     #
-    pdf(paste(Path, "results/rarefy/", OutName, "_rarefy_rarecurve.pdf", sep=""), width=12, height=8) 
+    pdf(paste(path, "results/rarefy/", OutName, "_rarefy_rarecurve.pdf", sep=""), width=12, height=8) 
     rarecurve(DF1, step = 20, sample = raremax, col = "blue", cex = 1.0)
     dev.off()
   } else {
-    print(paste(OutName, "Number of samples or taxa is less than 2, insufficient for rarefaction",sep = " ::: "))
+    cat("\n\n ->  ", OutName, ":::Number of samples or taxa is less than 2, insufficient for rarefaction \n\n")
   }
 }
-#for the clean taxa profile
-X1 = read.csv(paste(Path, "results/", "clean_taxa_profile.txt", sep=""), quote="",stringsAsFactors=F)
-rownames(X1) = X1[,1]
-Raref(DF=X1, OutName="all_taxa")
-#for the groups in step 5
-file.list = dir(paste(Path, "results/groups/", sep=""), pattern = ".txt") #list sample lca files
-for (i in 1:length(file.list)) {
-  X1 = read.csv(paste(Path, "results/groups/", file.list[i], sep=""), quote="",stringsAsFactors=F)
-  rownames(X1) = X1[,1]
-  Raref(DF = X1, OutName = sub(".txt", "", file.list[i]))
-}
 
-
-################
-#7 
-#cluster the taxa into a specific taxonomic level then produce heatmaps and stratplot
-################
-dir.create(paste(Path, "results/heatmap&stratplot", sep=""))
-tax.branch = read.csv(paste(Path, "results/", "taxa_branch.txt", sep=""), quote="", stringsAsFactors=F)
-Taxa.L = paste(":",Taxa.level,sep="")
-#function for clustering taxa
-Taxa.cluster = function(DF, OutName){
-  DF1 = data.frame(matrix(vector(), 0, dim(DF)[2], dimnames=list(c(), colnames(DF))),stringsAsFactors=F)
-  j=1
-  for (i in 1:dim(DF)[1]) {
-    V1 = grep(Taxa.L, tax.branch[grep(DF[i,1], tax.branch[,1]),])
-    if (length(V1) !=0) {
-      V2 = strsplit(tax.branch[grep(DF[i,1], tax.branch[,1]),V1],":")[[1]][2]
-      DF1[j,] = c(V2,DF[i,2:dim(DF)[2]])
-      j = j+1
-    }
-  }
-  DF2 = aggregate(. ~ taxa, data = DF1, sum)
-  write.table(DF2, file = paste(Path, "results/heatmap&stratplot/", OutName, Taxa.level, ".txt", sep=""), quote=F, 
-              row.names=F, col.names=T, sep=",")
-  return(DF2)
-}
 #function for heatmap
 HeatMap = function(DF){
-  #transfer data into percentage, subset the top 100 abundant taxa
-  rownames(DF) = DF[,1]
-  DF = DF[,-1]
+  
+  #transfer data into percentage and subset
   for (i in 1:dim(DF)[2]) {
-    DF[,i] = DF[,i]/sum(DF[,i])
+    if(sum(DF[,i]) != 0){
+      DF[,i] = DF[,i]/sum(DF[,i])
+    }
   }
   DF$sum = rowSums(DF)
   DF = DF[order(-DF$sum),]
-  DF = DF[1:100,-dim(DF)[2]]
+  
+  if (dim(DF)[1] > top.abundance) {
+    DF = DF[1:top.abundance,-dim(DF)[2]]
+  }
+  
   #heatmap
   DF1 = melt(DF)
   F1 = Heatmap(DF, column_dend_height = unit(1.5, "cm"), row_dend_width = unit(3, "cm"), show_row_names = T, show_column_names = T,
-          row_names_gp = gpar(cex=0.5), column_names_gp = gpar(cex=0.5), cluster_rows = T, cluster_columns= F, 
-          clustering_distance_rows = "pearson",clustering_distance_columns = "pearson",
-          col = colorRamp2(c(max(DF1$value), quantile(DF1$value, c(3)/4), quantile(DF1$value, c(2)/4), 
-                             quantile(DF1$value, c(1)/4), min(DF1$value)), brewer.pal(n=5, name="Spectral")), 
-          heatmap_legend_param = list(title = "abundance", title_gp = gpar(fontsize = 8), labels_gp = gpar(fontsize = 8), 
-                                      legend_height = unit(10, "cm"), color_bar = "continous"))
+               row_names_gp = gpar(cex=0.5), column_names_gp = gpar(cex=0.5), cluster_rows = T, cluster_columns= F, 
+               clustering_distance_rows = "pearson",clustering_distance_columns = "pearson",
+               col = colorRamp2(c(max(DF1$value), quantile(DF1$value, c(3)/4), quantile(DF1$value, c(2)/4), 
+                                  quantile(DF1$value, c(1)/4), min(DF1$value)), brewer.pal(n=5, name="Spectral")), 
+               heatmap_legend_param = list(title = "abundance", title_gp = gpar(fontsize = 8), labels_gp = gpar(fontsize = 8), 
+                                           legend_height = unit(10, "cm"), color_bar = "continous"))
+  
   return(F1)
 }
-#Function for stratplot, only valid when the original file names are in ages
+
+
+#Function for stratplot
 StratPlot = function(DF,OutName){
-  #transfer data into percentage, subset the top 100 abundant taxa
-  rownames(DF) = DF[,1]
-  DF = DF[,-1]
+  
+  #transfer data into percentage and subset
   for (i in 1:dim(DF)[2]) {
-    DF[,i] = DF[,i]/sum(DF[,i])
+    if(sum(DF[,i]) != 0){
+      DF[,i] = DF[,i]/sum(DF[,i])
+    }
   }
   DF$sum = rowSums(DF)
   DF = DF[order(-DF$sum),]
-  DF = DF[1:100,-dim(DF)[2]]
-  #stratplot
+  
+  if (dim(DF)[1] > top.abundance) {
+    DF = DF[1:top.abundance,-dim(DF)[2]]
+  }
+  
+  #Stratplot variables
   DF1 = t(DF)
-  Ages = as.numeric(rownames(DF2))
-  pdf(paste(Path, "results/heatmap&stratplot/", OutName, "_stratplot.pdf", sep=""), width=15, height=7)
-  Stratiplot(x = chooseTaxa(DF1, n.occ = 2, max.abun = 0.05), y = Ages, type = "poly", sort = "wa", xlab="Percentage", ylab = "Ages")
-  dev.off()
+  Ages = as.numeric(rownames(DF1))
+  
+  if(!any(is.na(Ages))){
+    
+    pdf(paste(path, "results/heatmap&stratplot/", OutName, "_stratplot.pdf", sep=""), width=15, height=7)
+    Stratiplot(x = chooseTaxa(DF1, n.occ = 2, max.abun = 0.05), y = Ages, type = "poly", sort = "wa", xlab="Percentage", ylab = "Ages")
+    dev.off()
+    
+  } else {
+    cat("\n\n ->  Metadata file does not contain numeric ages, Stratiplot abandoned \n\n")
+  }
+  
 }
-#process the complete taxa profile
-X1 = read.csv(paste(Path, "results/", "clean_taxa_profile.txt", sep=""), quote="",stringsAsFactors=F)
-X2 = Taxa.cluster(DF = X1, OutName = "com_taxa")
-StratPlot(X2,OutName = "com_taxa")
-X3 = HeatMap(X2)
-pdf(paste(Path, "results/heatmap&stratplot/com_taxa_heatmap.pdf", sep=""), width=8, height=13)
-X3
-dev.off()
-#for the groups in step 5
-file.list = dir(paste(Path, "results/groups/", sep=""), pattern = ".txt") #list sample lca files
+
+
+#analysis on the taxa groups 
+groupin = function(metadata, Funct){
+  
+  file.list = dir(paste(path, "results/taxa_groups/", sep=""), pattern = ".txt") #list files
+  
+  for (i in 1:length(file.list)) {
+    
+    X1 = read.csv(paste(path, "results/taxa_groups/", file.list[i], sep=""), sep="\t", quote="",stringsAsFactors=F, check.names=F)
+    row.names(X1) = X1[,1]
+    X1 = X1[,-1]
+    
+    if (Funct == "NMDS"){
+      NMDSc(DF = X1, OutName = sub(".txt", "", file.list[i]))
+    }
+    
+    if (Funct == "rarefy"){
+      Raref(DF = X1, OutName = sub(".txt", "", file.list[i]))
+    }
+    
+    if (Funct == "heatmap"){
+      X2 = Taxa.cluster(DF = X1, OutName = sub(".txt", "", file.list[i]))
+      pdf(paste(path, "results/heatmap&stratplot/", sub(".txt", "", file.list[i]), "_heatmap.pdf", sep=""), width=8, height=13)
+      print({
+        HeatMap(X2)
+      })
+      dev.off()
+    }
+    
+    if (Funct == "stratplot"){
+      X2 = Taxa.cluster(DF = X1, OutName = sub(".txt", "", file.list[i]))
+      StratPlot(DF = X2, OutName = sub(".txt", "", file.list[i]))
+    }
+    
+  }
+}
+
+
+######################################
+######################################
+#1
+#data read-in and pre-processes
+
+#genarate results directory
+cat("\n\n ->  Data read-in and pre-process, please be patient, it might take some time depending on file number and size\n\n")
+dir.create(paste(path, "results", sep=""))
+dir.create(paste(path, "results/intermediate", sep=""))
+
+#samples and coontrols read in seperately
+file.list1 = dir(path, pattern = ".lca$") #list sample lca files
+file.list2 = dir(paste(path, "blanks/",sep = ""), pattern = ".lca$") #list control lca files
+
+if(length(file.list1)==0){
+  cat("\n\n\n Error ->  no lca files found in the appointed working directory\n\n\n")
+  q("no")
+}
+
+if(length(file.list2)==0){
+  cat("\n\n\n ->   no \"blanks\" directory under the working directory or no lca files found in the \"blanks\" directory\n\n\n")
+}
+
+X1.1 = ReadIn(FileList = file.list1, Blank = F)
+
+if(length(file.list2)!=0){
+X1.2 = ReadIn(FileList = file.list2, Blank = T)
+
+#merges samples and controls
+X1 = merge(X1.1, X1.2, by="taxa", all=T)
+X1[is.na(X1)] = 0
+}else{
+  X1 = X1.1
+  X1[is.na(X1)] = 0
+}
+
+#writes combined taxonomic profile for each sample and control
+write.table(X1, file = paste(path, "results/intermediate/", "taxa_profile(with_controls).txt", sep=""), quote=F, 
+            row.names=F, col.names=T, sep=";")
+
+#writes a combined taxonomic profile for all samples
+write.table(X1.1, file = paste(path, "results/intermediate/", "taxa_profile.txt", sep=""), quote=F, 
+            row.names=F, col.names=T, sep=";")
+
+if(length(file.list2)!=0){
+#writes potential contamination list
+write.table(X1.2, file = paste(path, "results/intermediate/", "contambation_list.txt", sep=""), quote=F, 
+            row.names=F, col.names=T, sep=";")
+}
+
+#produces a full taxonomic branch for each taxa that will be used for taxa clustering afterwards
+DF2 = read.csv(paste(path, file.list1[1], sep=""), header=F, sep="\t", stringsAsFactors=F, fill=T, col.names = paste0("V",seq_len(60)))
+DF2 = DF2[,-1]
+
+for (i in 2:length(file.list1)) {
+  DF2.1 =  read.csv(paste(path, file.list1[i], sep=""), header=F, sep="\t", stringsAsFactors=F, fill=T, col.names = paste0("V",seq_len(60)))
+  DF2.1 = DF2.1[,-1]
+  
+  DF2 = concatenate(DF2, DF2.1)
+  DF2 = DF2[!duplicated(DF2[,1]),]
+}
+
+write.table(DF2, file = paste(path, "results/intermediate/", "taxa_branch.txt", sep=""), quote=F, 
+            row.names=F, col.names=T, sep=";")
+
+######################################
+######################################
+#2
+#Filters and cleans up the sample taxonomic profile 
+cat("\n\n ->  Filter and clean up taxonomic profiles \n\n")
+
+X1 = read.csv(paste(path, "results/intermediate/", "taxa_profile.txt", sep=""), sep=";", quote="", stringsAsFactors=F, check.names=F)
+
+if(length(file.list2)!=0){
+  cont.list = read.csv(paste(path, "results/intermediate/", "contambation_list.txt", sep=""), sep=";", quote="", stringsAsFactors=F, check.names=F)
+  if (dim(cont.list)[1]>0){
+    #Removes taxa from contamanation list
+    X2 = X1[-which(X1$taxa %in% cont.list$taxa),]
+  }else{
+    X2 =X1
+  }
+}else{
+  X2 =X1
+}
+
+#Removes lower representing taxa
+X3 = X2[,-1]
+X3[is.na(X3)] = 0
+X4 = 0
+for(i in 1:dim(X3)[1])
+{
+  if(sum(as.numeric(X3[i,])) >= thr2)
+  {
+    X4 = c(X4, i)
+  }
+}
+X4 = X4[-1]
+X5 = X2[X4,]
+
+#Removes taxa in the taxa.re list
+X6 = X5[!(X5$taxa %in% taxa.re),]
+
+#Removes samples in the sample removing list
+X7 = X6[,!(colnames(X6) %in% sample.re)]
+
+#Writes results to new table
+write.table(X7, file = paste(path, "results/intermediate/", "clean_taxa_profile.txt", sep=""), quote=F, 
+            row.names=F, col.names=T, sep=";")
+
+#read-in metadata if available and replace the column names
+if(is.na(metadata)){
+  cat("\n\n ->  Metadata file not supplied and file names will be illustrated in figs \n\n")
+}
+
+if(!is.na(metadata)){
+  cat("\n\n ->  Metadata supplied and will be used in illustrations \n\n")
+}
+
+X8 = datain(metadata = metadata, full =F)
+X8$taxa = row.names(X8)
+X8 = X8[,c(dim(X8)[2],1:(dim(X8)[2]-1))]
+
+write.table(X8, file = paste(path, "results/", "clean_taxa_profile.txt", sep=""), quote=F, 
+            row.names=F, col.names=T, sep="\t")
+
+
+######################################
+######################################
+#3
+#Cluster the cleaned taxa profile into groups and taxa ranks
+#groups
+if ("group"%in%func) {
+  
+  cat("\n\n ->  grouping taxa \n\n")
+  dir.create(paste(path, "results/taxa_groups", sep=""))
+  
+  tax.branch = read.csv(paste(path, "results/intermediate/", "taxa_branch.txt", sep=""), sep=";", quote="", stringsAsFactors=F)
+  X1 = read.csv(paste(path, "results/", "clean_taxa_profile.txt", sep=""),sep="\t", quote="", check.names=F,stringsAsFactors=F)
+  
+  GroupTaxa(DF = X1, TaxaUnit = group.name, metadata = metadata)
+}
+
+#taxa ranks
+dir.create(paste(path, "results/taxa_ranks", sep=""))
+
+X1 = datain(metadata = metadata, full=F)
+tax.branch = read.csv(paste(path, "results/intermediate/", "taxa_branch.txt", sep=""), sep=";",quote="", stringsAsFactors=F)
+
+for (taxa.level in c("species","genus","family")) {
+  
+  Taxa.L = paste(":",taxa.level,sep="")
+  X2 = Taxa.cluster(DF = X1, OutName = "com_taxa")
+  
+}
+
+
+file.list = dir(paste(path, "results/taxa_groups/", sep=""), pattern = ".txt") #list files
+
 for (i in 1:length(file.list)) {
-  X1 = read.csv(paste(Path, "results/groups/", file.list[i], sep=""), quote="",stringsAsFactors=F)
-  X2 = Taxa.cluster(DF = X1, OutName = sub(".txt", "", file.list[i]))
-  StratPlot(X2,OutName = sub(".txt", "", file.list[i]))
-  X3 = HeatMap(X2)
-  pdf(paste(Path, "results/heatmap&stratplot/", sub(".txt", "", file.list[i]), "_heatmap.pdf", sep=""), width=8, height=13)
-  X3
-  dev.off()
+  
+  X1 = read.csv(paste(path, "results/taxa_groups/", file.list[i], sep=""),sep="\t", quote="", check.names=F,stringsAsFactors=F)
+  rownames(X1)=X1[,1]
+  X1=X1[,-1]
+  OutName = sub(".taxa.txt", "", file.list[i])
+  
+  for (taxa.level in c("species","genus","family")) {
+    
+    Taxa.L = paste(":",taxa.level,sep="")
+    X2 = Taxa.cluster(DF = X1, OutName = OutName)
+    
+  }
+  
+}
+
+######################################
+######################################
+#4
+#NMDS
+if ("NMDS"%in%func) {
+  
+  cat("\n\n ->  NMDS on combined taxa profile, will take some time depending on input file number and size \n\n")
+  dir.create(paste(path, "results/NMDS", sep=""))
+  
+  # NMDS on taxa profiles for all samples
+  X1 = datain(metadata = metadata, full=F)
+  NMDSc(DF = X1, OutName = "complete_NMDS")
+  
+  if ("group"%in%func){
+    groupin(metadata = metadata, Funct = "NMDS")
+  }
 }
 
 
-################
-#8
-#produce files for megan and krona
-################
-#for megan
-dir.create(paste(Path, "results/megan&krona", sep=""))
-X1 = read.csv(paste(Path, "results/", "clean_taxa_profile.txt", sep=""), quote="",stringsAsFactors=F)
+######################################
+######################################
+#5
+#rarefaction
+if ("rarefy"%in%func){
+  
+  cat("\n\n ->  random rarefaction \n\n")
+  dir.create(paste(path, "results/rarefy", sep=""))
+  X1 = datain(metadata = metadata, full=F)
+  
+  Raref(DF=X1, OutName="all_taxa")
+  
+  #for the groups produced in step 5
+  if ("group"%in%func) {
+    groupin(metadata = metadata, Funct = "rarefy")
+  }
+  
+}
+
+
+######################################
+######################################
+#6 heatmap and stratplot
+dir.create(paste(path, "results/heatmap&stratplot", sep=""))
+
+#heatmap
+if ("heatmap"%in%func){
+  
+  cat("\n ->  drawing heatmap \n")
+  file.list = dir(paste(path, "results/taxa_ranks/", sep=""), pattern = ".txt")
+  
+  for (i in 1:length(file.list)) {
+    
+    X1 = read.csv(paste(path, "results/taxa_ranks/", file.list[i], sep=""),sep="\t", quote="", check.names=F,stringsAsFactors=F)
+    row.names(X1) = X1[,1]
+    X2 = X1[,-1]
+    Name = sub(".txt", "", file.list[i])
+    
+    pdf(paste(path, "results/heatmap&stratplot/",Name,"_heatmap.pdf", sep=""), width=8, height=13)
+    print({
+      HeatMap(X2)
+    })
+    dev.off() 
+  }
+}
+
+
+#stratplot
+if ("stratplot"%in%func){
+  
+  cat("\n ->  drawing stratplot \n")
+  file.list = dir(paste(path, "results/taxa_ranks/", sep=""), pattern = ".txt")
+  
+  for (i in 1:length(file.list)) {
+    
+    X1 = read.csv(paste(path, "results/taxa_ranks/", file.list[i], sep=""),sep="\t", quote="", check.names=F,stringsAsFactors=F)
+    row.names(X1) = X1[,1]
+    X2 = X1[,-1]
+    Name = sub(".txt", "", file.list[i])
+    
+    StratPlot(X2,OutName = Name)
+    
+  }
+}
+
+
+######################################
+######################################
+#7
+#Genarate files for MEGAN and Krona
+
+#For megan
+dir.create(paste(path, "results/megan&krona", sep=""))
+X1 = read.csv(paste(path, "results/", "clean_taxa_profile.txt", sep=""), sep="\t", quote="",check.names=F,stringsAsFactors=F)
+cat("\n ->  generate files for MEGAN and Krona \n")
+
 for (i in 1:dim(X1)[1]) {
   X1[i,1]  = strsplit(X1[i,1],":")[[1]][2]
 }
+
 colnames(X1)[1] = "#dataset"
-write.table(X1, file = paste(Path, "results/megan&krona/megan_com.txt", sep=""), quote=F, row.names=F, col.names=T, sep=",")
-#for krona
-#produce a krona style taxomomic path dataframe
-tax.branch = read.csv(paste(Path, "results/", "taxa_branch.txt", sep=""), quote="", stringsAsFactors=F)
+write.table(X1, file = paste(path, "results/megan&krona/megan_com.txt", sep=""), quote=F, row.names=F, col.names=T, sep=",")
+
+
+
+#Generate krona compatible output
+
+#generate a krona style taxomomic path dataframe
+tax.branch = read.csv(paste(path, "results/intermediate/", "taxa_branch.txt", sep=""), sep=";", quote="", stringsAsFactors=F)
 krona.branch = data.frame(matrix(nrow = dim(tax.branch)[1], ncol = 2), stringsAsFactors=F)
+
 for (i in 1:dim(tax.branch)[1]) {
+  
   krona.branch[i,1] = paste(strsplit(tax.branch[i,1],":")[[1]][1:2], collapse = ":")
-  Taxa.B = strsplit(krona.branch[j,1],":")[[1]][2]
-  for (j in 2:35) {
+  
+  Taxa.B = strsplit(krona.branch[i,1],":")[[1]][2]
+  
+  for (j in 2:dim(tax.branch)[2]) {
     if (!is.na(tax.branch[i,j])){
       Taxa.B = paste(strsplit(tax.branch[i,j],":")[[1]][2], Taxa.B, collapse = "/t")
     }
   }
+  
   krona.branch[i,2] = Taxa.B
 }
-#output the top 100 abandanced taxa as krona txt file
-X1 = read.csv(paste(Path, "results/", "clean_taxa_profile.txt", sep=""), quote="",stringsAsFactors=F)
+
+#Outputs the most abundant taxa as krona txt file
+X1 = read.csv(paste(path, "results/", "clean_taxa_profile.txt", sep=""), quote="",sep="\t",check.names=F,stringsAsFactors=F)
+
 for (i in 2:dim(X1)[2]) {
   X2 = data.frame(X1[,i], X1[,1], stringsAsFactors=F)
   X2 = X2[X2[,1] != 0,]
   X2 = X2[order(-X2[,1]),]
-  X2 = X2[1:100,]
-  for (j in 1:dim(X2)[1]){
-    X2[j,2] = krona.branch[which(krona.branch[,1] == X2[j,2], arr.ind=T), 2]
+  
+  if (dim(X2)[1]>0) {
+    
+    if (dim(X2)[1] >top.abundance ) {
+      X2 = X2[1:top.abundance,]
+    }
+    
+    for (j in 1:dim(X2)[1]) {
+      X2[j,2] = paste(strsplit(X2[j,2],":")[[1]][c(1,2)], collapse = ":")
+    }
+    
+    
+    for (j in 1:dim(X2)[1]){
+      X2[j,2] = krona.branch[which(krona.branch[,1] == X2[j,2], arr.ind=T), 2]
+    }
+    
+    write.table(X2, file = paste(path, "results/megan&krona/krona_", colnames(X1)[i] ,".txt", sep=""), quote=F, row.names=F, col.names=F, sep="\t")
+    
   }
-  write.table(X2, file = paste(Path, "results/megan&krona/krona_", colnames(X1)[i] ,".txt", sep=""), quote=F, row.names=F, col.names=F, sep="\t")
 }
-
-
-################
 #End
 ######################################
 ######################################
