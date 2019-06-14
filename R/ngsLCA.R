@@ -18,42 +18,32 @@
 #this step might require manually handling for the first running
 
 cat("\n ->  loading R libraries \n\n")
-library(devtools)
-library(vegan)
-library(gplots)
-library(ComplexHeatmap)
-library(circlize)
-library(reshape)
-library(RColorBrewer)
-library(analogue)
-library(readr)
 
-
-#if (!require("devtools", quietly=T)) {
-  #install.packages("devtools")
-#}
+if (!require("devtools", quietly=T)) {
+  install.packages("devtools")
+}
 
 
 
-#if (!require("vegan", quietly=T) | 
-  #  !require("gplots", quietly=T) | 
-   # !require("ComplexHeatmap", quietly=T) | 
-    #!require("circlize", quietly=T) | 
-    #!require("reshape", quietly=T) | 
-#    !require("RColorBrewer", quietly=T) | 
-#    !require("analogue", quietly=T) | 
-#    !require("readr",quietly=T)) {
+if (!require("vegan", quietly=T) | 
+    !require("gplots", quietly=T) | 
+    !require("ComplexHeatmap", quietly=T) | 
+    !require("circlize", quietly=T) | 
+    !require("reshape", quietly=T) | 
+    !require("RColorBrewer", quietly=T) | 
+    !require("analogue", quietly=T) | 
+    !require("readr",quietly=T)) {
   
-#  install.packages("vegan")
-#  install.packages("gplots")
-#  devtools::install_github("jokergoo/ComplexHeatmap")
-#  install.packages("circlize")
-#  install.packages("reshape")
-#  install.packages("RColorBrewer")
-#  install.packages("analogue")
-#  install.packages("readr")
+  install.packages("vegan")
+  install.packages("gplots")
+  devtools::install_github("jokergoo/ComplexHeatmap")
+  install.packages("circlize")
+  install.packages("reshape")
+  install.packages("RColorBrewer")
+  install.packages("analogue")
+  install.packages("readr")
   
-#}
+}
 
 
 ###############################
@@ -786,3 +776,4 @@ for (i in 2:dim(X1)[2]) {
 #End
 ######################################
 ######################################
+
