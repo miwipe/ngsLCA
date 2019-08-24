@@ -33,7 +33,7 @@ ifdef HTSSRC
 	$(CXX) -MM $(CXXFLAGS)  -I$(HTS_INCDIR) $*.cpp >$*.d
 
 ngsLCA: $(OBJ)
-	$(CXX) $(FLAGS)  -o ngsLCA *.o $(HTS_LIBDIR) -lz 
+	$(CXX) $(FLAGS)  -o ngsLCA *.o $(HTS_LIBDIR) -lz -llzma
 else
 %.o: %.c
 	$(CC) -c  $(CFLAGS)  $*.c
@@ -44,7 +44,7 @@ else
 	$(CXX) -MM $(CXXFLAGS)  $*.cpp >$*.d
 
 ngsLCA: $(OBJ)
-	$(CXX) $(FLAGS)  -o ngsLCA *.o -lz 
+	$(CXX) $(FLAGS)  -o ngsLCA *.o -lz -llzma
 endif
 
 clean:	
