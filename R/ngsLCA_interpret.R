@@ -13,37 +13,43 @@
 # see https://github.com/miwipe/ngsLCA for an example of metadata format
 
 
-###############################
-#install and request R packages
-#this step might require manually handling for the first running
+packs <- c("vegan","gplots","circlize","reshape","RColorBrewer","analogue","readr","BiocManager","devtools")
+biocondpacks <- c("ComplexHeatmap")
+libs <- .libPaths()
+installedPacks <- rownames(installed.packages(lib.loc=libs))
+needPacks <- packs[!packs%in%installedPacks]
+needPacks2 <- biocondpacks[!biocondpacks%in%installedPacks]
 
-cat("\n ->  loading R libraries \n\n")
-
-if (!require("devtools", quietly=T)) {
-  install.packages("devtools")
+if(length(c(needPacks,needPacks2))>0){
+    afile=tempfile()
+    cat('\t-> You need to install packages run the below command\n')
+    if(length(needPacks)>0){
+        cat("install.packages(c(",file=afile)
+        for(i in 1:length(needPacks)){
+            cat("\"",needPacks[i],"\"",file=afile,append=T)
+            if(i<length(needPacks))
+            cat(",",file=afile,append=T)
+        }
+        cat("))\n",file=afile,append=T)
+    }
+    if(length(needPacks2)>0){
+        cat("BiocManager::install(c(",file=afile,append=T)
+        for(i in 1:length(needPacks2)){
+            cat("\"",needPacks2[i],"\"",file=afile,append=T)
+            if(i<length(needPacks2))
+                cat(",",file=afile,append=T)
+        }
+        cat("))\n",file=afile,append=T)
+    }
+    tmp<-gsub(" ","",readLines(afile))
+    if(length(tmp)>0)
+        cat(" \t",tmp[1],"\n")
+    if(length(tmp)>1)
+        cat("\n\t",tmp[2],"\n")
+    unlink(afile)
+    quit()
 }
 
-
-
-if (!require("vegan", quietly=T) | 
-    !require("gplots", quietly=T) | 
-    !require("ComplexHeatmap", quietly=T) | 
-    !require("circlize", quietly=T) | 
-    !require("reshape", quietly=T) | 
-    !require("RColorBrewer", quietly=T) | 
-    !require("analogue", quietly=T) | 
-    !require("readr",quietly=T)) {
-  
-  install.packages("vegan")
-  install.packages("gplots")
-  devtools::install_github("jokergoo/ComplexHeatmap")
-  install.packages("circlize")
-  install.packages("reshape")
-  install.packages("RColorBrewer")
-  install.packages("analogue")
-  install.packages("readr")
-  
-}
 
 
 ###############################
@@ -51,6 +57,11 @@ if (!require("vegan", quietly=T) |
 #arguments read-in
 rm(list=(ls())) #clean up global environment
 options(warn=-1) #turn off Warning messages
+
+
+cat("\n ->  loading R libraries \n\n")
+tmp<-lapply(c(packs,biocondpacks), require, character.only = TRUE)
+
 
 l<-commandArgs(TRUE)
 
