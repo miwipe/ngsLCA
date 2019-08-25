@@ -11,6 +11,8 @@
 # 2) and negetive control lca files moved into a sub-directory named "blanks" under the working directory.
 # A metadata text (sample names, ages, locations, etc.) is optional as input. If provided, the reletive metadata will be illustrated in the results instead of file names
 # see https://github.com/miwipe/ngsLCA for an example of metadata format
+rm(list=(ls())) #clean up global environment
+options(warn=-1) #turn off Warning messages
 
 
 packs <- c("vegan","gplots","circlize","reshape","RColorBrewer","analogue","readr","BiocManager","devtools")
@@ -55,8 +57,6 @@ if(length(c(needPacks,needPacks2))>0){
 ###############################
 #0
 #arguments read-in
-rm(list=(ls())) #clean up global environment
-options(warn=-1) #turn off Warning messages
 
 
 cat("\n ->  loading R libraries \n\n")
