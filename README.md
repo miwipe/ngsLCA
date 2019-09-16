@@ -32,15 +32,12 @@ Two optional inputs:
 
 2) A metadata csv file matches the file names to sample names, ages, locations, etc. if provided, the supplied metadata will be illustrated in the results instead of file names. The metadata file accepte a comma separated two columns flat text, with first column covering all lca file names, and second column supplying the metadata will be illustrated.
 
-An example:
+   An example:
 
-file1.lca,s1_1
-
-file2.lca,s3_1
-
-file3.lca,s3_2
-
-....
+   file1.lca,s1_1
+   file2.lca,s3_1
+   file3.lca,s3_2
+   ....
 
 
 
