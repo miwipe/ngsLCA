@@ -32,19 +32,35 @@ Two optional inputs:
 
 2) A metadata csv file matches the file names to sample names, ages, locations, etc. if provided, the supplied metadata will be illustrated in the results instead of file names. The metadata file accepte a comma separated two columns flat text, with first column covering all lca file names, and second column supplying the metadata will be illustrated. An example "metadata.txt" can be found under the R folder.
 
-## Parameters and modules
+## Parameters
 
 An example for running ngsLCA_interpret.R:
 
-Rscript path_to_script/ngsLCA_interpret.R path="working_directory/" func = c("NMDS", "group", "rarefy", "heatmap") thr1=2 thr2=5 metadata="path_to_metadata/metadata.txt" taxa.re = c("1:root","33090:Viridiplantae") sample.re = c("file1.lca","file2.lca") group.name = c("2:Bacteria", "33630:Alveolata", "33682:Euglenozoa", "4751:Fungi", "33208:Metazoa", "33090:Viridiplantae", "10239:Viruses") top.abundance = 30
+Rscript path_to_script/ngsLCA_interpret.R path="working_directory/" func = c("NMDS", "group", "rarefy", "heatmap") thr1=2 thr2=5 metadata="path_to_metadata/metadata.txt" taxa.re = c("1:root") sample.re = c("file1","file5") group.name = c("2:Bacteria", "33090:Viridiplantae") top.abundance = 30
 
 Parameters:
 
-path      working directory contains all lca fiels
+path -- working directory containing all lca fiels
 
-func      functions that will be performed; default: NMDS, group, rarefy, heatmap; other option: stratplot (recommend only            when metadata are ages) 
+func -- functions that will be performed; default: NMDS, group, rarefy, heatmap; other option: stratplot (recommend only            when metadata are ages) 
+
+thr1 -- minimum reads number representing a taxa in each sample that considered to be authentic , default 2
+
+thr2 -- minimum summed reads number representing a taxa across all samples that considered to be authentic , default 5
       
-metadata   a full path to the metadata
+metadata -- full path to your metadata, optional
+
+taxa.re -- a list of taxa that will be removed from final results, format: "NCBI taxaID:Scientific name" e.g. "71240:eudicotyledons"
+
+sample.re -- a list of samples that will be removed from the final results, file names with the suffix ".lca" removed
+
+group.name -- higher taxonomic ranks that will be used for grouping the taxa, format: "NCBI taxaID:Scientific name"; default: "2:Bacteria", "33630:Alveolata", "33682:Euglenozoa", "4751:Fungi", "33208:Metazoa", "33090:Viridiplantae", "10239:Viruses"
+
+top.abundance -- how many most abundant taxa will be illustrated in figs
+
+
+
+
 
 
 
