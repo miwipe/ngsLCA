@@ -34,9 +34,9 @@ Two optional inputs:
 
    An example:
 
-   file1.lca,s1_1
-   file2.lca,s3_1
-   file3.lca,s3_2
+   file1.lca,s1_1\n
+   file2.lca,s3_1\n
+   file3.lca,s3_2\n
    ....
 
 
