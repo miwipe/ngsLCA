@@ -12,18 +12,22 @@ cd htslib;make;cd ../ngsLCA;make HTSSRC=../htslib
 ## Finding resource files for program from NCBI
 ## Running ngsLCA
 
-# Visualizing results using ngsLCA_interpret.R
+# Visualizing results with R script
 
-This R script processes and visualizes outputs from ngsLCA
+The R script ngsLCA_interpret.R processes and visualizes outputs from ngsLCA
 
-Developed and tested in R version 3.6.1 under unix
+Developed and tested in R version 3.6.1
 
-Please report bugs and/or suggestions to ycwang@bio.ku.dk or wyc661217@gmail.com
+Bugs and/or suggestions to ycwang@bio.ku.dk or wyc661217@gmail.com
 
-### As inputing, this script requires all lca files (*.lca) copied into a working directory
-# Two optional inputs:
-# 1) lca files for negetive laboratory control samples can be  into a sub-directory named "blanks" under the working directory
+##Input files
 
-# 2) and  .
-# A metadata text (sample names, ages, locations, etc.) is optional as input. If provided, the reletive metadata will be illustrated in the results instead of file names
-# see https://github.com/miwipe/ngsLCA for an example of metadata format
+As inputing, this script requires all lca files (*.lca) copied into a working directory
+
+Two optional inputs:
+
+1) lca files for negetive laboratory control samples can be copied into a sub-directory named "blanks" under the working directory
+
+2) A metadata text file (sample names, ages, locations, etc.), if provided, the supplied metadata will be illustrated in the results instead of file names
+
+
