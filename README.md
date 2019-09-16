@@ -26,8 +26,8 @@ As inputing, this script requires all lca files (*.lca) copied into a working di
 
 Two optional inputs:
 
-1) lca files for negetive laboratory control samples can be copied into a sub-directory named "blanks" under the working directory
+1) lca files for negetive laboratory control samples can be copied into a sub-directory named "blanks" under the working directory. If provided, the taxa detected in these control samples will be removed from real samples.
 
-2) A metadata text file (sample names, ages, locations, etc.), if provided, the supplied metadata will be illustrated in the results instead of file names
+2) A metadata text file matches the file names to sample names, ages, locations, etc. if provided, the supplied metadata will be illustrated in the results instead of file names.
 
 
