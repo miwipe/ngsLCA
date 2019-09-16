@@ -20,7 +20,7 @@ Developed and tested in R version 3.6.1
 
 Bugs and/or suggestions to ycwang@bio.ku.dk or wyc661217@gmail.com
 
-##Input files
+## Input files
 
 As inputing, this script requires all lca files (*.lca) copied into a working directory
 
