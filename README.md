@@ -14,9 +14,9 @@ cd htslib;make;cd ../ngsLCA;make HTSSRC=../htslib
 
 # Processing and visualizing results using ngsLCA_interpret.R
 
-### This R script processes and visualizes outputs from ngsLCA 
-### Developed and tested in R version 3.6.1 under unix
-### Please report bugs and/or suggestions to ycwang@bio.ku.dk or wyc661217@gmail.com
+This R script processes and visualizes outputs from ngsLCA 
+Developed and tested in R version 3.6.1 under unix
+Please report bugs and/or suggestions to ycwang@bio.ku.dk or wyc661217@gmail.com
 
 ### As inputing, this script requires all lca files (*.lca) copied into a working directory
 # Two optional inputs:
