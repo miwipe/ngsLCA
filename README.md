@@ -36,7 +36,7 @@ Two optional inputs:
 
 An example for running ngsLCA_interpret.R:
 
-Rscript path_to_script/ngsLCA_interpret.R path="working_directory/" func = c("NMDS", "group", "rarefy", "heatmap") thr1=2 thr2=5 metadata="path_to_metadata/metadata.txt" taxa.re = c("1:root") sample.re = c("file1","file5") group.name = c("2:Bacteria", "33090:Viridiplantae") top.abundance = 30
+Rscript path_to_script/ngsLCA_interpret.R path="working_directory/" func = c("NMDS", "group", "rarefy", "heatmap") thr1=2 thr2=5 metadata="path_to_metadata/metadata.txt" taxa.re = c("1:root") group.name = c("2:Bacteria", "33090:Viridiplantae") top.abundance = 30
 
 Parameters:
 
@@ -52,11 +52,11 @@ metadata -- full path to your metadata, optional
 
 taxa.re -- a list of taxa that will be removed from final results, format: "NCBI taxaID:Scientific name" e.g. "71240:eudicotyledons"
 
-sample.re -- a list of samples that will be removed from the final results, file names with the suffix ".lca" removed
+sample.re -- a list of samples that will be removed from the final results, file names with the suffix ".lca" removed, e.g. sample.re = c("file1","file5")
 
 group.name -- higher taxonomic ranks that will be used for grouping the taxa, format: "NCBI taxaID:Scientific name"; default: "2:Bacteria", "33630:Alveolata", "33682:Euglenozoa", "4751:Fungi", "33208:Metazoa", "33090:Viridiplantae", "10239:Viruses"
 
-top.abundance -- how many most abundant taxa will be illustrated in figs
+top.abundance -- how many most abundant taxa will be illustrated in figs, default 100
 
 
 
