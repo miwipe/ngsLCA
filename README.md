@@ -32,6 +32,23 @@ Two optional inputs:
 
 2) A metadata csv file matches the file names to sample names, ages, locations, etc. if provided, the supplied metadata will be illustrated in the results instead of file names. The metadata file accepte a comma separated two columns flat text, with first column covering all lca file names, and second column supplying the metadata will be illustrated. An example "metadata.txt" can be found under the R folder.
 
+## Parameters and modules
+
+An example for running ngsLCA_interpret.R:
+
+Rscript path_to_script/ngsLCA_interpret.R path="working_directory/" func = c("NMDS", "group", "rarefy", "heatmap") thr1=2 thr2=5 metadata="path_to_metadata/metadata.txt" taxa.re = c("1:root","33090:Viridiplantae") sample.re = c("file1.lca","file2.lca") group.name = c("2:Bacteria", "33630:Alveolata", "33682:Euglenozoa", "4751:Fungi", "33208:Metazoa", "33090:Viridiplantae", "10239:Viruses") top.abundance = 30
+
+Parameters:
+
+path  working directory contains all lca fiels
+func  functions that will be performed; default: NMDS, group, rarefy, heatmap; other option: stratplot (recommend only when       
+      metadata are ages) 
+metadata  a full path to the metadata
+
+
+
+
+
 
 
 
