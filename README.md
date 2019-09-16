@@ -40,7 +40,7 @@ Rscript path_to_script/ngsLCA_interpret.R path="working_directory/" func = c("NM
 
 Parameters:
 
-path -- working directory containing all lca fiels
+path -- working directory containing all lca files
 
 func -- functions that will be performed; default: NMDS, group, rarefy, heatmap; other option: stratplot (recommend only            when metadata are ages) 
 
