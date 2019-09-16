@@ -44,17 +44,19 @@ path -- working directory containing all lca files
 
 func -- functions that will be performed; default: NMDS, group, rarefy, heatmap; other option: stratplot (recommend only            when metadata are ages) 
 
-thr1 -- minimum reads number representing a taxa in each sample that considered to be authentic , default 2
+thr1 -- minimum reads number required for a taxon in each sample, integer, default: 2
 
-thr2 -- minimum summed reads number representing a taxa across all samples that considered to be authentic , default 5
+thr2 -- minimum summed reads number representing a taxa across all samples, default: 5
       
 metadata -- full path to your metadata, optional
 
 taxa.re -- a list of taxa that will be removed from final results, format: "NCBI taxaID:Scientific name" e.g. "71240:eudicotyledons"
 
-sample.re -- a list of samples that will be removed from the final results, file names with the suffix ".lca" removed, e.g. sample.re = c("file1","file5")
+sample.re -- a list of samples that will be removed from the final results, file names with suffix ".lca" removed, e.g. sample.re = c("file1","file5")
 
 group.name -- higher taxonomic ranks that will be used for grouping the taxa, format: "NCBI taxaID:Scientific name"; default: "2:Bacteria", "33630:Alveolata", "33682:Euglenozoa", "4751:Fungi", "33208:Metazoa", "33090:Viridiplantae", "10239:Viruses"
+
+thr3 -- minimum percentage of the reads number of a taxon to the total reads numbers of the group, range from 0 to 1, default: 0
 
 top.abundance -- how many most abundant taxa will be illustrated in figs, default 100
 
