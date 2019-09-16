@@ -1,0 +1,6 @@
+file1.lca,s1_1
+file4.lca,s3_1
+file5.lca,s3_2
+file6.lca,s3_3
+file7.lca,s2a_1
+file8.lca,s2a_2
