@@ -52,7 +52,7 @@ taxa.re -- a list of NCBI taxaID representing the taxa that will be removed from
 
 sample.re -- a list of lca file names that will not be included in the final results, e.g. sample.re = c("file1.lca","file5.lca")
 
-group.name -- higher taxonomic ranks that will be used for grouping taxa, format: "NCBI taxaID:Scientific name"; default: "2:Bacteria", "33630:Alveolata", "33682:Euglenozoa", "4751:Fungi", "33208:Metazoa", "33090:Viridiplantae", "10239:Viruses"
+group.name -- higher taxonomic ranks that will be used for grouping taxa, format: "NCBI taxaID:Scientific name"; default: group.name =c("10239:Viruses", "2157:Archaea", "2:Bacteria", "4751:Fungi", "33090:Viridiplantae", "33317:Protostomia", "33208:Metazoa")
 
 thr3 -- minimum percentage of the reads of a taxon to the total reads numbers of the group, range from 0 to 1, default: 0
 
