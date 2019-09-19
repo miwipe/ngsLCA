@@ -14,11 +14,9 @@ cd htslib;make;cd ../ngsLCA;make HTSSRC=../htslib
 
 # Visualizing results with R script
 
-The R script ngsLCA_interpret.R processes and visualizes outputs from ngsLCA
+R script ngsLCA_interpret.R processes and visualizes outputs from ngsLCA.
 
-Developed and tested in R version 3.6.1
-
-The script will detecte and install required packages automaticlly before running.
+It will detecte and install required packages automaticlly before running, and was developed and tested under R version 3.6.1.
 
 Bugs and/or suggestions to wyc661217@gmail.com
 
