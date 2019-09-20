@@ -14,21 +14,23 @@ cd htslib;make;cd ../ngsLCA;make HTSSRC=../htslib
 
 # Visualizing results with R script
 
-R script ngsLCA_interpret.R processes and visualizes outputs from ngsLCA.
+The R script ngsLCA_interpret.R processes and visualizes outputs from ngsLCA.
 
-It will detecte and install required packages automaticlly before running, and was developed and tested under R version 3.6.1.
+Developed and tested under R version 3.6.1.
+
+It will detecte and install required packages automaticlly before first running. 
 
 Bugs and/or suggestions to wyc661217@gmail.com
 
 ## Input files
 
-For inputing, this script requires all lca files (*.lca) copied into a working directory.
+For inputing, the script requires all lca files (*.lca) copied into a working directory.
 
 Two optional inputs:
 
 1) lca files for negetive laboratory control samples can be copied into a sub-directory named "blanks" under the working directory. If provided, the taxa detected in control samples will be removed from real samples.
 
-2) A csv metadata file matches the file names to sample names, ages, locations, etc. if provided, the supplied metadata will be illustrated in the results instead of file names. The metadata file format should be a tab separated two columns flat text, with first column covering lca file names, and second column supplying the metadata that will be illustrated. An example "metadata.txt" can be found under the R folder.
+2) A csv metadata file matches the file names to the metadata and orders of illustrating the samples. if provided, the supplied metadata will be shown in the results instead of file names. The metadata file format should be a tab (\t) separated three columns flat text, with first column covering lca file names, second column supplying the metadata that will be illustrated, and third column for the order of files. An example "metadata.txt" can be found under the R folder.
 
 ## Parameters
 
