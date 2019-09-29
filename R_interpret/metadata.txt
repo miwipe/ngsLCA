@@ -1,0 +1,5 @@
+#file_name	metadata	rank
+CUG_1.lca	CGG-3	1
+CUG_2.lca	CGG-4	2
+CUG_3.lca	LN-P1.3	3
+CUG_4.lca	LN-P1.4	4
