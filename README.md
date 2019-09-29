@@ -46,7 +46,7 @@ thr2 -- minimum summed reads number required across all samples for a taxa, defa
       
 metadata -- full path to your metadata, optional
 
-taxa.re -- a list of NCBI taxaID representing the taxa that will be removed from final results, taxaID can be found at https://www.ncbi.nlm.nih.gov/Taxonomy; taxa="1,131567" will romove "root" with taxaID 1 and "cellular organisms" with taxaID 131567
+taxa.re -- a list of NCBI taxaID representing the taxa that will be removed from final results, taxaID can be found at https://www.ncbi.nlm.nih.gov/Taxonomy, for example taxa="1,131567" will romove "root" with taxaID 1 and "cellular organisms" with taxaID 131567
 
 sample.re -- a list of lca file names that will not be included in the final results, sample.re = c("file1.lca","file5.lca")
 
