@@ -652,9 +652,11 @@ if (length(file.list1)>1) {
     PATH.1 = read.csv(paste(path, file.list1[i], sep=""), header=F, sep="\t", stringsAsFactors=F, fill=T, col.names = paste0("V",seq_len(60)),comment.char = "#")
     PATH.1 = PATH.1[,-1]
     PATH = rbind(PATH,PATH.1)
+    PATH = PATH[!duplicated(PATH[,1]),]
   }
+}else{
+  PATH = PATH[!duplicated(PATH[,1]),]
 }
-PATH = PATH[!duplicated(PATH[,1]),]
 write.table(PATH, file = paste(path, "R_results/intermediate/", "taxa_branch.txt", sep=""), quote=F, 
             row.names=F, col.names=T, sep="\t")
 
