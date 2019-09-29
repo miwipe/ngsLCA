@@ -12,7 +12,7 @@ cd htslib;make;cd ../ngsLCA;make HTSSRC=../htslib
 ## Finding resource files for program from NCBI
 ## Running ngsLCA
 
-# Visualizing results with R script
+# Visualizing results with R
 
 The R script ngsLCA_interpret.R processes and visualizes outputs from ngsLCA. It will generate a directory "R_results" in your appointed working directory. The script will detecte and install required packages automaticlly before running. 
 
