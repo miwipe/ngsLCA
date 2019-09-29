@@ -40,7 +40,7 @@ path -- working directory containing all lca files
 
 func -- functions that will be performed; default: func="NMDS, group, rarefy, heatmap"; other option: stratplot (recommend            when metadata are ages) 
 
-thr1 -- minimum reads number required for a taxon in each sample, integer, default: thr1=2
+thr1 -- minimum reads number required for a taxon in each sample, default: thr1=2
 
 thr2 -- minimum summed reads number required across all samples for a taxa, default: thr2=5
       
