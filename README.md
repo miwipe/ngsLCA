@@ -14,13 +14,9 @@ cd htslib;make;cd ../ngsLCA;make HTSSRC=../htslib
 
 # Visualizing results with R script
 
-The R script ngsLCA_interpret.R processes and visualizes outputs from ngsLCA.
+The R script ngsLCA_interpret.R processes and visualizes outputs from ngsLCA. It will generate a directory "R_results" in your appointed working directory. The script will detecte and install required packages automaticlly before running. 
 
-Developed and tested under R version 3.6.1.
-
-It will detecte and install required packages automaticlly before first running. 
-
-Bugs and/or suggestions to wyc661217@gmail.com
+Developed and tested under R version 3.6.1. Bugs and/or suggestions to wyc661217@gmail.com
 
 ## Input files
 
@@ -30,13 +26,13 @@ Two optional inputs:
 
 1) lca files for negetive laboratory control samples can be copied into a sub-directory named "blanks" under the working directory. If provided, the taxa detected in control samples will be removed from real samples.
 
-2) A csv metadata file matches the file names to the metadata and orders of illustrating the samples. if provided, the supplied metadata will be shown in the results instead of file names. The metadata file format should be a tab (\t) separated three columns flat text, with first column covering lca file names, second column supplying the metadata that will be illustrated, and third column for the order of files. An example "metadata.txt" can be found under the R folder.
+2) A csv metadata file matches the file names to the metadata and orders for illustrating your samples. if provided, the supplied metadata will be shown in the results instead of file names. The metadata file format should be a tab (\t) separated three columns flat text, with first column covering lca file names, second column supplying the metadata that will be illustrated, and third column for the order of files. An example "metadata.txt" can be found under the R folder.
 
 ## Parameters
 
 An example for running ngsLCA_interpret.R:
 
-Rscript path_to_script/ngsLCA_interpret.R path="working_directory/" func = c("NMDS", "group", "rarefy", "heatmap") thr1=2 thr2=5 metadata="path_to_metadata/metadata.txt" taxa.re = c(1，131567) group.name = c("2:Bacteria", "33090:Viridiplantae") top.abundance = 30
+Rscript path_to_script/ngsLCA_interpret.R path="working_directory/" thr1=2 thr2=5 metadata="path_to_metadata/metadata.txt" top.abundance=50
 
 Parameters:
 
