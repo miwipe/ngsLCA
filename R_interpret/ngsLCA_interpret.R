@@ -304,6 +304,7 @@ GroupTaxa = function(DF, TaxaUnit){
     }
   }
   
+  DF_ALL = DF_ALL[!duplicated(DF_ALL$taxa),]
   write.table(DF_ALL, file = paste(path, "R_results/intermediate/", "taxa_profile_v3.txt", sep=""), quote=F, 
               row.names=F, col.names=T, sep="\t")
   DF_ALL = DF_ALL %>% separate(taxa, sep=":", c("taxa_ID","taxa_name","taxonomic_rank"))
@@ -580,20 +581,20 @@ if (length(file.list2)!=0){
                       passed_thr2=NA,
                       contaminate_removed=NA,
                       stringsAsFactors = F)}else{
-                      
-                      ReadNO = data.frame(sample=c(colnames(DF1)[-1]),
-                                          original_Reads=NA,
-                                          passed_thr1=NA,
-                                          passed_thr2=NA,
-                                          contaminate_removed=NA,
-                                          stringsAsFactors = F)
-                      
-                      TaxaNO = data.frame(sample=c(colnames(DF1)[-1]),
-                                          taxa_in_original_lca=NA,
-                                          passed_thr1=NA,
-                                          passed_thr2=NA,
-                                          contaminate_removed=NA,
-                                          stringsAsFactors = F)}
+                        
+                        ReadNO = data.frame(sample=c(colnames(DF1)[-1]),
+                                            original_Reads=NA,
+                                            passed_thr1=NA,
+                                            passed_thr2=NA,
+                                            contaminate_removed=NA,
+                                            stringsAsFactors = F)
+                        
+                        TaxaNO = data.frame(sample=c(colnames(DF1)[-1]),
+                                            taxa_in_original_lca=NA,
+                                            passed_thr1=NA,
+                                            passed_thr2=NA,
+                                            contaminate_removed=NA,
+                                            stringsAsFactors = F)}
 
 if (dim(DF1)[2]>2) {
   
@@ -794,7 +795,7 @@ if ("heatmap"%in%func){
     X2 = as.data.frame(X1[,-c(1:3)])
     colnames(X2) = colnames(X1)[-c(1:3)]
     rownames(X2) = rownames(X1)
-
+    
     Name = sub(".txt", "", file.list[i])
     
     if (dim(X2)[2]>1) {
