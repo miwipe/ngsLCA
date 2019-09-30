@@ -108,7 +108,7 @@ args<-list(
   sample.re = NA,
   group.name = "10239:Viruses,2157:Archaea,2:Bacteria,4751:Fungi,33090:Viridiplantae,33208:Metazoa",
   thr3 = 0,
-  top.abundance = 100
+  top.abundance = 50
 )
 
 ##if no argument are given this will print the needed arguments and the default settings for the optional arguments
