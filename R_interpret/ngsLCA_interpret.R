@@ -453,7 +453,7 @@ HeatMap = function(DF){
   
   #heatmap
   F1 = Heatmap(DF, column_dend_height = unit(1.5, "cm"), row_dend_width = unit(3, "cm"), show_row_names = T, show_column_names = T,
-               row_names_gp = gpar(cex=0.8), column_names_gp = gpar(cex=0.5), cluster_rows = T, cluster_columns= F, 
+               row_names_gp = gpar(cex=0.4), column_names_gp = gpar(cex=0.5), cluster_rows = T, cluster_columns= F, 
                clustering_distance_rows = "pearson",clustering_distance_columns = "pearson",
                col = colorRamp2(c(0, 0.001, 0.01, 0.03, 0.06, 0.2), 
                                 c("white", "cornflowerblue", "yellow", "#FD8D3C","#E31A1C","#B10026")),
