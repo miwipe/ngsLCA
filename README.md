@@ -9,8 +9,27 @@ git clone https://github.com/miwipe/ngsLCA
 cd htslib;make;cd ../ngsLCA;make HTSSRC=../htslib
 
 # Running Main c/c++ program
-## Finding resource files for program from NCBI
-## Running ngsLCA
+## Downloading resource files for program from NCBI 
+mkdir ncbi_tax_dmp
+cd ncbi_tax_dmp/
+wget https://ftp.ncbi.nlm.nih.gov/pub/taxonomy/new_taxdump/new_taxdump.zip 
+unzip new_taxdump.zip 
+wget https://ftp.ncbi.nlm.nih.gov/pub/taxonomy/accession2taxid/nucl_gb.accession2taxid.gz
+gunzip nucl_gb.accession2taxid.gz
+
+
+## Running ngsLCA 
+The LCA algorithm is a naïve LCA that calculates the least common ancestor using the NCBI taxonomy for a multiple alignment file in bam format sorted by read ID. It takes into account a chosen similarity interval between each read and its alignments. The headers of the database therefore needs to follow the nomenclature from NCBI. It has been tested downloading the nt, refseq as well as individual genomes and fasta sequences. The similarity can be set as either an edit distance [-editdist[min/max]] eg. number of mismatches between the read and the alignments to the reference genomes or as a similarity distance [-simscore[low/high]] eg. a percentage of mismatches between the read and the alignments to the reference genomes.
+
+Edit distance can be a number between 0-10, while the similarity score is a number between 0-1. 
+
+
+Example for running the ngsLCA algorithm with 0 edit distances to reference
+ngsLCA/ngsLCA -editdistmin 0 -editdistmax 0 -names ncbi_tax_dmp/names.dmp.gz -nodes ncbi_tax_dmp/nodes.dmp.gz -acc2tax ncbi_tax_dmp/nucl_gb.accession2taxid_24april.gz -bam sorted_bam_file.bam -outnames outfile.ed0
+
+Example for running the ngsLCA algorithm with 0 edit distances to reference
+ngsLCA/ngsLCA -simscoremin 0.90 -simscoremax 1.0 -names ncbi_tax_dmp/names.dmp.gz -nodes ncbi_tax_dmp/nodes.dmp.gz -acc2tax ncbi_tax_dmp/nucl_gb.accession2taxid_24april.gz -bam sorted_bam_file.bam -outnames outfile.ed0
+
 
 # Visualizing results with R
 
