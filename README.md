@@ -10,18 +10,20 @@ cd htslib;make;cd ../ngsLCA;make HTSSRC=../htslib
 For a quick test of the programme installation alignments in bam file formats can be downloaded here: "LINK TO DATA BAM FILES"
 
 To generate alignment files (in bam/sam) files please follow this quick guide on how to prepare your own data:
-1. Download HiSeq2500 sequencing data using this link "LINK TO FASTQ", (It is assummed that the fastq files have been demulitplexed, trimmed and quality controlled). 
-2. Download a database of your own choice but based on the ncbi taxonomy (It is required the fasta header in the database contains the accession no. provided by ncbi and that this appears in the first field of the header). this could be the RefSeq plastid database: 
+1. Download HiSeq2500 sequencing data using this link "LINK TO FASTQ" (It is assummed that the fastq files have been demulitplexed, trimmed and quality controlled). 
+2. Download a database of your own choice but based on the ncbi taxonomy (It is required that the fasta header in the database contains ncbi accession no. provided by ncbi and that this appears in the first field of the header). This could be the RefSeq plastid database: 
 
 mkdir refseq_plastids
-
+cd refseq_plastids
 wget ftp://ftp.ncbi.nlm.nih.gov/refseq/release/plastid/*genomic.fna.gz
 gzip -d *
 cat *.fna > plastids.fa
 rm *.fna
-bowtie2-build --threads 5 plastids.fa plastids  ###### We should test it for BWA alignments also and add those in. 
+bowtie2-build --threads 5 plastids.fa plastids  ###### NOTE TO US We should test it for BWA alignments also and add those in. 
 
-3. bowtie2 --threads 40 -k 5000 -x $DB -U fastq_file.fq --no-unal | samtools view -bS - > filein.database_name.bam
+3. Next, align your trimmed and quality checked reads against the database 
+bowtie2 --threads 40 -k 5000 -x custom_db -U fastq_file.fq --no-unal | samtools view -bS - > filein.database_name.bam
+
 #If more than one database have used as reference the reads needs to be merged and sorted using samtools (important as the LCA assumes that all unique readIDs are aligned next to each other). See examples below:
 
 samtools merge -@ 10 -n merged.out.bam sorted.bam
