@@ -13,12 +13,12 @@ To generate alignment files (in bam/sam) files please follow this quick guide on
 1. Download HiSeq2500 sequencing data using this link "LINK TO FASTQ" (It is assummed that the fastq files have been demulitplexed, trimmed and quality controlled). 
 2. Download a database of your own choice but based on the ncbi taxonomy (It is required that the fasta header in the database contains ncbi accession no. provided by ncbi and that this appears in the first field of the header). This could be the RefSeq plastid database: 
 
-mkdir refseq_plastids
-cd refseq_plastids
-wget ftp://ftp.ncbi.nlm.nih.gov/refseq/release/plastid/*genomic.fna.gz
-gzip -d *
-cat *.fna > plastids.fa
-rm *.fna
+mkdir refseq_plastids;
+cd refseq_plastids;
+wget ftp://ftp.ncbi.nlm.nih.gov/refseq/release/plastid/*genomic.fna.gz;
+gzip -d *;
+cat *.fna > plastids.fa;
+rm *.fna;
 bowtie2-build --threads 5 plastids.fa plastids  ###### NOTE TO US We should test it for BWA alignments also and add those in. 
 
 3. Next, align your trimmed and quality checked reads against the database 
@@ -32,12 +32,12 @@ samtools sort -n -T /TMP_folder/ -O bam -o file.sort.bam -@ 5 tmp.bam.merged -m 
 
 # Running Main c/c++ program
 ## Downloading resource files for program from NCBI 
-mkdir ncbi_tax_dmp
-cd ncbi_tax_dmp/
-wget https://ftp.ncbi.nlm.nih.gov/pub/taxonomy/new_taxdump/new_taxdump.zip 
-unzip new_taxdump.zip 
-wget https://ftp.ncbi.nlm.nih.gov/pub/taxonomy/accession2taxid/nucl_gb.accession2taxid.gz
-gunzip nucl_gb.accession2taxid.gz
+mkdir ncbi_tax_dmp;
+cd ncbi_tax_dmp/;
+wget https://ftp.ncbi.nlm.nih.gov/pub/taxonomy/new_taxdump/new_taxdump.zip;
+unzip new_taxdump.zip;
+wget https://ftp.ncbi.nlm.nih.gov/pub/taxonomy/accession2taxid/nucl_gb.accession2taxid.gz;
+gunzip nucl_gb.accession2taxid.gz;
 
 
 ## Running ngsLCA 
