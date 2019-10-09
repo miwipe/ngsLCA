@@ -77,7 +77,7 @@ Two optional inputs:
 
 1) lca files for negetive laboratory control samples can be copied into a sub-directory named "blanks" under the working directory. If provided, the taxa detected in control samples will be removed from real samples.
 
-2) A csv metadata file matches the file names to the metadata, and the orders for illustrating your samples. if provided, the supplied metadata will be shown in the results instead of file names. The metadata file format should be a tab (\t) separated three columns flat text, with first column covering lca file names, second column supplying the metadata that will be illustrated, and third column for the order of illustrating samples. An example "metadata.txt" can be found under the R folder.
+2) A csv metadata file matches the file names to the metadata, and the orders for illustrating your samples. if provided, the supplied metadata will be shown in the results instead of file names. The metadata file format should be a tab (\t) separated three columns flat text, with first column covering lca file names, second column supplying the metadata that will be illustrated, and third column for the order of illustrating samples. An example "metadata.txt" can be found under the bam folder.
 
 ## Parameters
 
