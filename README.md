@@ -22,7 +22,7 @@ rm *.fna
 bowtie2-build --threads 5 plastids.fa plastids  ###### NOTE TO US We should test it for BWA alignments also and add those in. 
 
 3. Next, align your trimmed and quality checked reads against the database 
-bowtie2 --threads 40 -k 5000 -x custom_db -U fastq_file.fq --no-unal | samtools view -bS - > filein.database_name.bam
+bowtie2 --threads 40 -k 5000 -x refseq_plastids/plastids -U fastq_file.fq --no-unal | samtools view -bS - > file_name.database_name.bam
 
 #If more than one database have used as reference the reads needs to be merged and sorted using samtools (important as the LCA assumes that all unique readIDs are aligned next to each other). See examples below:
 
