@@ -1,4 +1,4 @@
-#
+#file_name	SampleID	Age/depth/rank
 SPL_015_1444.fq.plastids.bam	SPL_015	1444
 SPL_055_3112.fq.plastids.bam	SPL_055	3112
 SPL_113_5430.fq.plastids.bam	SPL_113	5430
