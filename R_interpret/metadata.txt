@@ -1,4 +1,4 @@
-#file_name	metadata	rank
+#file_name	SampleID	Age/depth/rank
 CUG_1.lca	CGG-3	1
 CUG_2.lca	CGG-4	2
 CUG_3.lca	LN-P1.3	3
