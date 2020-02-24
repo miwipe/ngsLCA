@@ -79,24 +79,24 @@ ngsLCA/ngsLCA -simscoremin 0.90 -simscoremax 1.0 -names ncbi_tax_dmp/names.dmp.g
 ## The .lca output file format
 The resulting file from ngsLCA (.lca) is regular text file in which each line contains a unique read that aligned to a reference with the given simlarity speficified when executing ngsLCA. The file is colon seperated and the first column contains the read metadata which is subdivided in a colon seperated style and the first is the read ID (colon seperated column 1-7), the query sequence (csc 8), the lenght of the sequence (csc 9), the number hits to a reference in the database(s) (scs 10). 
 
-The second column (tab seperated) contains the lowest taxonomic node the read has been assigned to, seperated by colon is the 'NCBI taxID':'taxon name':'taxonomic level assigned' to. Following columns contains the taxonomic path higher in the NCBI taxonomy for each assignment.  
+The second column (tab seperated) contains the lowest taxonomic node the read has been assigned to, seperated by colon is the 'NCBI taxID':'taxon name':'taxonomic level' assigned to. Following columns contains the taxonomic path higher in the NCBI taxonomy for each assignment.  
 
 
 # Visualizing results with R
 
-The R script ngsLCA_interpret.R processes and visualizes outputs from ngsLCA. It will generate a directory "R_results" in your appointed working directory. The script will detect and install required packages automatically before running. 
+The R script ngsLCA_interpret.R merges, filters, splits and visualizes outputs from ngsLCA (.lca files). It will generate a directory "R_results" in the working directory. The script will detect and install required packages automatically before running. 
 
-Developed and tested under R version 3.6.1. Bugs and/or suggestions to wyc661217@gmail.com
+This script was developed and tested under R version 3.6.1. Bugs and/or suggestions email wyc661217@gmail.com and mwpedersen@sund.ku.dk
 
 ## Input files
 
-For inputing, the script requires all lca files (*.lca) copied into a working directory.
+This script requires all .lca files to be located in the same working directory. 
 
-Two optional inputs:
+Before executing the script two options should be considered:
 
-1. lca files for negative laboratory control samples can be copied into a sub-directory named "blanks" under the working directory. If provided, the taxa detected in control samples will be removed from real samples.
+First, the script can remove taxa found in laboratory controls by making a folder in the working directory called 'blanks' and hereafter copying in the corresponding lca files from the labotory control. If provided, the taxa found in the control samples will be removed from the output from the 'true' samples.
 
-2. A csv metadata file matches the file names to the metadata, and the orders for illustrating your samples. if provided, the supplied metadata will be shown in the results instead of file names. The metadata file format should be a tab (\t) separated three columns flat text, with first column covering lca file names, second column supplying the metadata that will be illustrated, and third column for the order of illustrating samples. An example "metadata.txt" can be found under the bam folder.
+Secondly, a metadata file can be supplied to rename and reorder samples (according to age, depth or a desired rank) in the evetual illustrations. This metadata should be in a tab (\t) separated file format, and containing three columns. In which the first column should contain a list of all lca file names (excluding the filenames in the blank folder), second column should contain the desired naming of the samples in the illustrations, and third column should be a numeric value that can order samples (age, depth or rank, interval are not allowed). An example "metadata.txt" can be found under the bam folder.
 
 ## Parameters
 
@@ -108,12 +108,14 @@ Parameters:
 
 path -- working directory containing all lca files
 
-func -- functions that will be performed; default: func="NMDS, group, rarefy, heatmap"; other option: stratplot (recommend            when metadata are ages) 
+func -- functions that will be performed; default: func="NMDS, group, rarefy, heatmap"; other option: stratplot (only works when metadata are supplied, best as depths or ages) 
 
 thr1 -- minimum reads number required for a taxon in each sample, default: thr1=2
 
 thr2 -- minimum summed reads number required across all samples for a taxa, default: thr2=5
-      
+ 
+thr3 -- minimum percentage of the reads for a taxon to the total reads numbers of the group, range from 0 to 1, default: thr3=0    
+
 metadata -- full path to your metadata, optional
 
 taxa.re -- a list of NCBI taxaID representing the taxa that will be removed from final results, taxaID can be found at https://www.ncbi.nlm.nih.gov/Taxonomy, for example inputting taxa="1,131567" will remove "root" with taxaID 1 and "cellular organisms" with taxaID 131567
@@ -121,7 +123,5 @@ taxa.re -- a list of NCBI taxaID representing the taxa that will be removed from
 sample.re -- a list of lca file names that will not be included in the final results, sample.re="file1.lca,file5.lca"
 
 group.name -- higher taxonomic ranks that will be used for grouping taxa, format: "NCBI taxaID:Scientific name"; default: group.name="10239:Viruses,2157:Archaea,2:Bacteria,4751:Fungi,33090:Viridiplantae,33208:Metazoa"
-
-thr3 -- minimum percentage of the reads for a taxon to the total reads numbers of the group, range from 0 to 1, default: thr3=0
 
 top.abundance -- how many most abundant taxa will be illustrated in figs, default: top.abundance=50
