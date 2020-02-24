@@ -76,6 +76,12 @@ The similarity score function works exactly the same way as for the edit distanc
 ngsLCA/ngsLCA -simscoremin 0.90 -simscoremax 1.0 -names ncbi_tax_dmp/names.dmp.gz -nodes ncbi_tax_dmp/nodes.dmp.gz -acc2tax ncbi_tax_dmp/nucl_gb.accession2taxid_24april.gz -bam sorted_bam_file.bam -outnames outfile.ed0
 ```
 
+# The .lca output file format
+The resulting file from ngsLCA (.lca) is regular text file in which each line contains a unique read that aligned to a reference with the given simlarity speficified when executing ngsLCA. The file is colon seperated and the first column contains the read metadata which is subdivided in a colon seperated style and the first is the read ID (colon seperated column 1-7), the query sequence (csc 8), the lenght of the sequence (csc 9), the number hits to a reference in the database(s) (scs 10). 
+
+The second column (tab seperated) contains the lowest taxonomic node the read has been assigned to, seperated by colon is the 'NCBI taxID':'taxon name':'taxonomic level assigned' to. Following columns contains the taxonomic path higher in the NCBI taxonomy for each assignment.  
+
+
 # Visualizing results with R
 
 The R script ngsLCA_interpret.R processes and visualizes outputs from ngsLCA. It will generate a directory "R_results" in your appointed working directory. The script will detect and install required packages automatically before running. 
