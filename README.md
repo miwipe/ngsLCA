@@ -2,25 +2,25 @@
 [![Build Status](https://travis-ci.org/miwipe/ngsLCA.svg?branch=master)](https://travis-ci.org/miwipe/ngsLCA)
 
 # Installation
-ngsLCA requires [HTSlib](https://github.com/samtools/htslib) which is common dependency for many popular sequence handling programs (e.g.[samtools](https://github.com/samtools/samtools) or [bcftools](http://samtools.github.io/bcftools/)). You can install it as shown below or link to a preinstalled library when running make on ngsLCA.  
+ngsLCA requires [HTSlib](https://github.com/samtools/htslib) which is common dependency for sequence handling programs (e.g.[samtools](https://github.com/samtools/samtools) or [bcftools](http://samtools.github.io/bcftools/)). You can install it as shown below or link to a preinstalled library when running make on ngsLCA.  
 
 
-'''
+```
 git clone https://github.com/SAMtools/htslib
 git clone https://github.com/miwipe/ngsLCA
 cd htslib
 make
 cd ../ngsLCA
 make HTSSRC=../htslib
-'''
+```
 # Test dataset
-For a quick test of the programme installation alignments in bam file formats can be downloaded here: "LINK TO DATA BAM FILES"
+For a quick test of the programme installation, alignment files in bam formats can be found in the folder: "bam_files"
 
-To generate alignment files (in bam/sam) please follow this quick guide on how to prepare your own data:
-1. Download HiSeq2500 sequencing data using this link "LINK TO FASTQ" (It is assumed that the fastq files have been demulitplexed, trimmed and quality controlled). 
+To generate alignment files from your own data (in bam/sam) please follow this quick guide on how to prepare your own data:
+1. Download raw sequencing data, (example fastq files can be found here "LINK TO FASTQ" (It is assumed that all fastq files have been demultiplexed, trimmed and quality controlled). 
 2. Download a database of your own choice but based on the ncbi taxonomy (it is required that the fasta header in the database contains ncbi accession no. provided by ncbi and that this appears in the first field of the header). This could be the RefSeq plastid database: 
 
-'''
+```
 mkdir refseq_plastids;
 cd refseq_plastids;
 wget ftp://ftp.ncbi.nlm.nih.gov/refseq/release/plastid/*genomic.fna.gz;
@@ -28,19 +28,19 @@ gzip -d *;
 cat *.fna > plastids.fa;
 rm *.fna;
 bowtie2-build --threads 5 plastids.fa plastids  ###### NOTE TO US We should test it for BWA alignments also and add those in. 
-'''
+```
 
 3. Next, align your trimmed and quality checked reads against the database 
-'''
+```
 bowtie2 --threads 40 -k 5000 -x refseq_plastids/plastids -U fastq_file.fq --no-unal | samtools view -bS - > file_name.database_name.bam
-'''
+```
 
-If more than one database have used as reference the reads needs to be merged and sorted using samtools (important as the LCA assumes that all unique readIDs are aligned next to each other). See example below:
+If more than one database have been used as reference all resulting bam files needs to be merged and sorted using samtools (important as the LCA assumes that all unique readIDs are aligned next to each other). See example below:
 
-'''
-samtools merge -@ 10 -n merged.out.bam sorted.bam
+```
+samtools merge -@ 10 -n merged.out.bam *.bam
 samtools sort -n -T /TMP_folder/ -O bam -o file.sort.bam -@ 5 tmp.bam.merged -m 5G
-'''
+```
 
 # Running Main c/c++ program
 ## Downloading resource files for program from NCBI 
