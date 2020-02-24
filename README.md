@@ -4,7 +4,7 @@
 This is the official development repository for ngsLCA (next generation sequence Least Common Ancestor algorithm). This package provides a fast and flexible taxonomic classification of DNA reads aligned to a reference database containing multiple organisms. The classification builds upon the NCBI taxonomy and performs a naïve least common ancestor assignment for reads with multiple alignment against different references. It is a commandline based tool that outputs a text file whcih easily can be parsed and handled in R or like, for further statistical analysis. An Rscript is provided for a quick transformation of the lca output to tables which are provided in different formats e.g. a regular comma seperated table as well as krona and megan compatible input formats. The output tables is also split into different kingdoms and taxonomic levels. In addition, it output NMDS plots, rarefaction analysis, heatmaps and stratplots for a quick overview of the dataset. Lastly, if laboratory controls have been sequenced and are provided it can subtract contamination taxa from the final output. 
 
 # Building ngsLCA
-ngsLCA requires [HTSlib](https://github.com/samtools/htslib) which is common dependency for sequence handling programs (e.g.[samtools](https://github.com/samtools/samtools) or [bcftools](http://samtools.github.io/bcftools/)). You can install it as shown below or link to a previously-installed HTSlib when running make on ngsLCA.  
+ngsLCA requires [HTSlib](https://github.com/samtools/htslib) which is a common library used for handling high-throughput sequencing data. You can install it as shown below or link to a previously-installed HTSlib when running make on ngsLCA.  
 
 
 ```
