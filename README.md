@@ -1,7 +1,7 @@
 # ngsLCA
 [![Build Status](https://travis-ci.org/miwipe/ngsLCA.svg?branch=master)](https://travis-ci.org/miwipe/ngsLCA)
 
-This is the official development repository for ngsLCA (next generation sequence Least Common Ancestor algorithm). This package provides a fast and flexible taxonomic classification of DNA reads aligned to a reference database containing multiple organisms. The classification builds upon the NCBI taxonomy and performs a naïve least common ancestor assignment for reads with multiple alignment against different references. It is a commandline based tool that outputs a text file whcih easily can be parsed and handled in R or like, for further statistical analysis. 
+This is the official development repository for ngsLCA (next generation sequence Least Common Ancestor algorithm). This package provides a fast and flexible taxonomic classification of DNA reads aligned to a reference database containing multiple organisms. The classification builds upon the NCBI taxonomy and performs a naïve least common ancestor assignment for reads with multiple alignment against different references. It is a commandline based tool that outputs a text file which easily can be parsed and handled in R or like, for further statistical analysis. 
 
 An Rscript is provided for a quick transformation of the lca output to tables which are provided in different formats e.g. a regular comma seperated table as well as krona and megan compatible input formats. The output tables is also split into different kingdoms and taxonomic levels. In addition, it output NMDS plots, rarefaction analysis, heatmaps and stratplots for a quick overview of the dataset. Lastly, if laboratory controls have been sequenced and are provided it can subtract contamination taxa from the final output. 
 
@@ -21,7 +21,7 @@ make HTSSRC=../htslib
 For a quick test of the installation, alignment files in bam formats can be found in the folder: "bam_files"
 
 To generate alignment files from your own data (in bam/sam) please follow this quick guide on how to prepare your own data:
-1. Download raw sequencing data, (example fastq files can be found here "LINK TO FASTQ" (It is assumed that all fastq files have been demultiplexed, trimmed and quality controlled). 
+1. Download raw sequencing data, example fastq-files can be found in the fastq folder (It is assumed that all fastq-files have been demultiplexed, trimmed and quality controlled). 
 2. Download a database of your own choice but based on the ncbi taxonomy (it is required that the fasta header in the database contains ncbi accession no. provided by ncbi and that this appears in the first field of the header). This could be the RefSeq plastid database: 
 
 ```
@@ -75,9 +75,9 @@ If the editditmin is for example set to 2 the algorithm will only parse reads wi
 ```
 ngsLCA/ngsLCA -editdistmin 2 -editdistmax 2 -names ncbi_tax_dmp/names.dmp -nodes ncbi_tax_dmp/nodes.dmp -acc2tax ncbi_tax_dmp/nucl_gb.accession2taxid -bam sorted_bam_file.bam -outnames outfile.ed2
 ```
-The similarity score function works exactly the same way as for the edit distance, with the exception that the similarity to the reference is now calculated as a percentage and hence takes the length of the read into account. Example for running the ngsLCA algorithm with similarity scores (90-100% similarity) [-simscore[low/high]] 0.9-1.0. 
+The similarity score function works exactly the same way as for the edit distance, with the exception that the similarity to the reference is now calculated as a percentage and hence takes the length of the read into account. Example for running the ngsLCA algorithm with similarity scores (95-100% similarity) [-simscore[low/high]] 0.95-1.0. 
 ```
-ngsLCA/ngsLCA -simscorelow 0.90 -simscorehigh 1.0 -names ncbi_tax_dmp/names.dmp -nodes ncbi_tax_dmp/nodes.dmp -acc2tax ncbi_tax_dmp/nucl_gb.accession2taxid -bam sorted_bam_file.bam -outnames outfile.ss09to1
+ngsLCA/ngsLCA -simscorelow 0.95 -simscorehigh 1.0 -names ncbi_tax_dmp/names.dmp -nodes ncbi_tax_dmp/nodes.dmp -acc2tax ncbi_tax_dmp/nucl_gb.accession2taxid -bam sorted_bam_file.bam -outnames outfile.ss095to1
 ```
 
 ## The .lca output file format
