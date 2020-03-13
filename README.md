@@ -118,7 +118,7 @@ thr1 -- minimum reads number required for a taxon in each sample, default: thr1=
 
 thr2 -- minimum summed reads number required across all samples for a taxa, default: thr2=5
  
-thr3 -- minimum percentage of the reads for a taxon to the total reads numbers of the group, range from 0 to 1, default: thr3=0    
+thr3 -- minimum percentage of reads for a taxon relative to the sum of reads within a group, range from 0 to 1, default: thr3=0    
 
 metadata -- full path to your metadata, optional
 
