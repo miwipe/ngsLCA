@@ -36,14 +36,14 @@ bowtie2-build --threads 5 plastids.fa plastids
 
 3. Next, align your trimmed and quality checked reads against the database 
 ```
-bowtie2 --threads 40 -k 5000 -x refseq_plastids/plastids -U fastq_file.fq --no-unal | samtools view -bS - > file_name.database_name.bam
+bowtie2 --threads 10 -k 5000 -x refseq_plastids/plastids -U fastq_file.fq --no-unal | samtools view -bS - > file_name.database_name.bam
 ```
 
 If more than one database have been used as reference all resulting bam files needs to be merged and sorted using samtools (important as the LCA assumes that all unique readIDs are aligned next to each other). See example below:
 
 ```
 samtools merge -@ 10 -n merged.out.bam *.bam
-samtools sort -n -T /TMP_folder/ -O bam -o file.sort.bam -@ 5 tmp.bam.merged -m 5G
+samtools sort -n -T /TMP_folder/ -O bam -o file.sort.bam -@ 5 tmp.bam.merged -m 2G
 ```
 
 # Running Main c/c++ program
