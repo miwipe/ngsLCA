@@ -123,22 +123,35 @@ path_blank -- working directory containing the lca files for all blank controls
 output -- name of the output folder under the working directory (path)
 
 task -- functions that will be performed, the "pre-process" and "filter" need to be first performed before running other    functions.
-  pre-process -- count the reads number for each detected taxon to form a taxon-count matrix for each input lca file; merging all taxon-count matrixes to generate a combined taxonomic profile.
-  filter -- filter the taxonomic profile by user-defined thresholds.
-  de-contamination -- substract the taxa in the contamination list from the taxonomic profile, if path_blank supplied.
-  group -- split the taxonomic profile into different kingdoms (or user-defined taxonomic groups).
-  rank -- split the taxonomic profile into different taxonomic ranks.
-  count -- count the reads number and taxa number after each filter.
-  megan -- generate file for MEGAN input.
-  krona -- generate file for krona input.
-  heatmap -- generate heatmaps.
-  barplot -- generate barplots.
-  stratplot -- generate stratplots
-  rarefy -- perform the random rarefaction analysis.
-  NMDS -- perform the NMDS rarefaction analysis.
+
+###### pre-process -- count the reads number for each detected taxon to form a taxon-count matrix for each input lca file; merging all taxon-count matrixes to generate a combined taxonomic profile.
+
+###### filter -- filter the taxonomic profile by user-defined thresholds.
+
+###### de-contamination -- substract the taxa in the contamination list from the taxonomic profile, if path_blank supplied.
+
+###### group -- split the taxonomic profile into different kingdoms (or user-defined taxonomic groups).
+
+###### rank -- split the taxonomic profile into different taxonomic ranks.
+
+###### count -- count the reads number and taxa number after each filter.
+
+###### megan -- generate file for MEGAN input.
+
+###### krona -- generate file for krona input.
+
+###### heatmap -- generate heatmaps.
+
+###### barplot -- generate barplots.
+
+###### stratplot -- generate stratplots
+
+###### rarefy -- perform the random rarefaction analysis.
+
+###### NMDS -- perform the NMDS rarefaction analysis.
 
 metadata -- path to your metadata
-  The supplied metadata should be in a tab (\t) separated format, and containing three columns. In which the first column contains a list of all lca file names, second column should contain the desired naming of the samples in the illustrations, and third column should be a numeric value that can order samples (age, depth or rank, interval are not allowed). An example "metadata.txt" can be found under the "R_script" folder.
+###### The supplied metadata should be in a tab (\t) separated format, and containing three columns. In which the first column contains a list of all lca file names, second column should contain the desired naming of the samples in the illustrations, and third column should be a numeric value that can order samples (age, depth or rank, interval are not allowed). An example "metadata.txt" can be found under the "R_script" folder.
 
 threshold.1 -- minimum reads number required for confirming a taxon in each sample
 
@@ -170,12 +183,21 @@ NMDS_trymax -- maximum numbers of random starts in search of convergent solution
 ## Results
 
 intermediate -- intermediate files, containing the taxonomic profile after each filtering
+
 taxonomic_profiles -- tab separated tables for all the cleaned taxonomic profiles
+
 counts -- reads and taxa number statistics for each sample
+
 megan -- generated files for MEGAN input
+
 krona -- generated files for krona input
+
 heatmap -- generated heatmaps
+
 barplot -- generated barplots
+
 stratplot -- generated stratplots
+
 rarefaction -- random rarefaction curves
+
 NMDS -- NMDS analysis output data and figures
