@@ -114,7 +114,7 @@ Rscript ngsLCA/R_script/ngsLCA_interpret.R
 
 Parameters:
 
-path -- working directory containing the lca files that will be processed
+path -- ⋅⋅⋅working directory containing the lca files that will be processed
   This is the only compulsory parameter for the script
 
 path_blank -- working directory containing the lca files for all blank controls
