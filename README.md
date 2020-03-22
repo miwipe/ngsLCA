@@ -1,9 +1,10 @@
 # ngsLCA
 [![Build Status](https://travis-ci.org/miwipe/ngsLCA.svg?branch=master)](https://travis-ci.org/miwipe/ngsLCA)
 
-This is the official development repository for ngsLCA (next generation sequence Least Common Ancestor algorithm). This package provides a fast and flexible taxonomic classification of DNA reads aligned to a reference database containing multiple organisms. The classification builds upon the NCBI taxonomy and performs a naïve least common ancestor assignment for reads with multiple alignment against different references. It is a commandline based tool that outputs a text file which easily can be parsed and handled in R or like, for further statistical analysis. 
+This is the official development repository for ngsLCA (next generation sequence Least Common Ancestor algorithm). This package includes two modules, of which the first provides a fast and flexible taxonomic classification of DNA reads aligned to reference databases containing multiple organisms. The classification builds upon the NCBI taxonomy and performs a naïve least common ancestor assignment for reads with multiple alignments against different references. It is a commandline based tool that outputs a text file in "lca" format. 
 
-An Rscript is provided for a quick transformation of the lca output to tables which are provided in different formats e.g. a regular comma seperated table as well as krona and megan compatible input formats. The output tables is also split into different kingdoms and taxonomic levels. In addition, it output NMDS plots, rarefaction analysis, heatmaps and stratplots for a quick overview of the dataset. Lastly, if laboratory controls have been sequenced and are provided it can subtract contamination taxa from the final output. 
+An Rscript as the second module is provided for a quick transformation of the "lca" files to tables in different formats after filtering, e.g. a regular tab seperated table, krona and megan compatible formats. The output tables are also split into different kingdoms (or user-defined taxonomic groups) and taxonomic levels. In addition, it outputs 
+heatmaps, barplots and stratplots as well as NMDS and rarefaction analysis for a quick overview of the dataset. If laboratory controls have been sequenced and are provided it can also subtract contamination taxa from the output. 
 
 # Building ngsLCA
 ngsLCA requires [HTSlib](https://github.com/samtools/htslib) which is a common library used for handling high-throughput sequencing data. You can install it as shown below or link to a previously-installed HTSlib when running make on ngsLCA.  
@@ -18,11 +19,13 @@ cd ../ngsLCA
 make HTSSRC=../htslib
 ```
 # Test dataset
-For a quick test of the installation, alignment files in bam formats can be found in the folder: "bam_files"
+For a quick test of the ngsLCA, alignment files in bam format as inout can be found in the folder: "bam_files".
 
 To generate alignment files from your own data (in bam/sam) please follow this quick guide on how to prepare your own data:
+
 1. Download raw sequencing data, example fastq-files can be found in the fastq folder (It is assumed that all fastq-files have been demultiplexed, trimmed and quality controlled). 
-2. Download a database of your own choice but based on the ncbi taxonomy (it is required that the fasta header in the database contains ncbi accession no. provided by ncbi and that this appears in the first field of the header). This could be the RefSeq plastid database: 
+
+2. Download a database of your own choice. The toolit is built upon the NCBI taxonomy therefore requires the reference database(s) complying to the NCBI format, i.e. fasta header should contain accession ID as the first string that appears in the NCBI access2taxID file, and the corresponded taxID is present in NCBI taxonomy dmp files. This could be the NCBI-nt and NCBI-RefSeq, for example NCBI-Refseq plastid database: 
 
 ```
 mkdir refseq_plastids;
@@ -34,19 +37,19 @@ rm *.fna;
 bowtie2-build --threads 5 plastids.fa plastids 
 ```
 
-3. Next, align your trimmed and quality checked reads against the database 
+3. Align your trimmed and quality checked reads against the database 
 ```
 bowtie2 --threads 10 -k 5000 -x refseq_plastids/plastids -U fastq_file.fq --no-unal | samtools view -bS - > file_name.database_name.bam
 ```
 
-If more than one database have been used as reference all resulting bam files needs to be merged and sorted using samtools (important as the LCA assumes that all unique readIDs are aligned next to each other). See example below:
+4. If more than one database have been used as reference all resulting bam files needs to be merged and sorted using samtools (important as the LCA assumes that all unique readIDs are aligned next to each other). See example below:
 
 ```
 samtools merge -@ 10 -n merged.out.bam *.bam
 samtools sort -n -T /TMP_folder/ -O bam -o file.sort.bam -@ 5 tmp.bam.merged -m 2G
 ```
 
-# Running Main c/c++ program
+# Running the ngsLCA first module
 ## Downloading resource files for program from NCBI 
 ```
 mkdir ncbi_tax_dmp;
@@ -57,8 +60,8 @@ wget https://ftp.ncbi.nlm.nih.gov/pub/taxonomy/accession2taxid/nucl_gb.accession
 gunzip nucl_gb.accession2taxid.gz;
 ```
 
-## Running ngsLCA 
-The LCA algorithm is a naïve LCA that calculates the least common ancestor using the NCBI taxonomy for a multiple alignment file in bam format sorted by read ID. It takes into account a chosen similarity interval between each read and its alignments. The headers of the database therefore needs to follow the nomenclature from NCBI. It has been tested downloading the nt, refseq as well as individual genomes and fasta sequences. The similarity can be set as either an edit distance [-editdist[min/max]] eg. number of mismatches between the read and each alignment to a reference genomes or as a similarity distance [-simscore[low/high]] eg. a percentage of mismatches between the read and each alignment to a reference genomes.
+## Running the main ngsLCA program
+The first module takes into account a chosen similarity interval between each read and its reference in the generated bam/sam file. It has been tested downloading the nt, refseq as well as individual genomes and fasta sequences. The similarity can be set as either an edit distance [-editdist[min/max]] eg. number of mismatches between the read and each alignment to a reference genomes or as a similarity distance [-simscore[low/high]] eg. a percentage of mismatches between the read and each alignment to a reference genomes.
 
 Edit distance can be a number between 0-10, while the similarity score is a number between 0-1. 
 
@@ -81,51 +84,98 @@ ngsLCA/ngsLCA -simscorelow 0.95 -simscorehigh 1.0 -names ncbi_tax_dmp/names.dmp 
 ```
 
 ## The .lca output file format
-The resulting file from ngsLCA (.lca) is regular text file in which each line contains a unique read that aligned to a reference with the given simlarity speficified when executing ngsLCA. The file is colon seperated and the first column contains the read metadata which is subdivided in a colon seperated style and the first is the read ID (colon seperated column 1-7), the query sequence (csc 8), the lenght of the sequence (csc 9), the number hits to a reference in the database(s) (scs 10). 
+The resulting file (.lca) from the first module is a regular text file in which each line contains a unique read that aligned to a reference with the given simlarity speficified when executing ngsLCA. 
 
-The second column (tab seperated) contains the lowest taxonomic node the read has been assigned to, seperated by colon is the 'NCBI taxID':'taxon name':'taxonomic level' assigned to. Following columns contains the taxonomic path higher in the NCBI taxonomy for each assignment.  
+The file is tab seperated and the first column contains the read metadata which is subdivided in a colon seperated style and the first is the read ID (colon seperated column 1-7), the query sequence (csc 8), the lenght of the sequence (csc 9), the number hits to a reference in the database(s) (scs 10). 
+
+The second column contain the lowest taxonomic node the read has been assigned to, seperated by colon is the 'NCBI taxID':'taxon name':'taxonomic level' assigned to. Following columns contain the taxonomic path higher in the NCBI taxonomy for each assignment.  
 
 
-# Visualizing results with R
+# Running the ngsLCA second module
 
-The R script ngsLCA_interpret.R merges, filters, splits and visualizes outputs from ngsLCA (.lca files). It will generate a directory "R_results" in the working directory. The script will detect and install required packages automatically before running. 
+The script ngsLCA_interpret.R is supplied in the folder "R_script", which filters, splits and visualizes outputs of the first module. It assumes each input lca file representing a sample and will generate a folder in the working directory containing all results. 
 
-This script was developed and tested under R version 3.6.1. Bugs and/or suggestions email wyc661217@gmail.com and mwpedersen@sund.ku.dk
 
 ## Input files
 
 This script requires all .lca files to be located in the same working directory. 
 
-Before executing the script two options should be considered:
-
-First, the script can remove taxa found in laboratory controls by making a folder in the working directory called 'blanks' and hereafter copying in the corresponding lca files from the labotory control. If provided, the taxa found in the control samples will be removed from the output from the 'true' samples.
-
-Secondly, a metadata file can be supplied to rename and reorder samples (according to age, depth or a desired rank) in the evetual illustrations. This metadata should be in a tab (\t) separated file format, and containing three columns. In which the first column should contain a list of all lca file names (excluding the filenames in the blank folder), second column should contain the desired naming of the samples in the illustrations, and third column should be a numeric value that can order samples (age, depth or rank, interval are not allowed). An example "metadata.txt" can be found under the bam folder.
+An example for running ngsLCA_interpret.R:
+```
+Rscript ngsLCA/R_script/ngsLCA_interpret.R path="working_directory" metadata="path_to_metadata/metadata.txt"
+```
 
 ## Parameters
 
-An example for running ngsLCA_interpret.R:
+Run the script without any input to show the default value for each parameter:
 ```
-Rscript path_to_script/ngsLCA_interpret.R path="working_directory/" metadata="path_to_metadata/metadata.txt"
+Rscript ngsLCA/R_script/ngsLCA_interpret.R
 ```
+
 Parameters:
 
-path -- working directory containing all lca files
+path -- working directory containing the lca files that will be processed
+  This is the only compulsory parameter for the script
 
-func -- functions that will be performed; default: func="NMDS, group, rarefy, heatmap"; other option: stratplot (only works when metadata are supplied, best as depths or ages) 
+path_blank -- working directory containing the lca files for all blank controls
+  If supplied, a contamination list will be generated by merging all taxa deteced in these control samples, and the listed taxa will be substracted (optional) from the uotput results.
+  
+output -- name of the output folder under the working directory (path)
 
-thr1 -- minimum reads number required for a taxon in each sample, default: thr1=2
+task -- functions that will be performed, the "pre-process" and "filter" need to be first performed before running other    functions.
+  pre-process -- count the reads number for each detected taxon to form a taxon-count matrix for each input lca file; merging all taxon-count matrixes to generate a combined taxonomic profile.
+  filter -- filter the taxonomic profile by user-defined thresholds.
+  de-contamination -- substract the taxa in the contamination list from the taxonomic profile, if path_blank supplied.
+  group -- split the taxonomic profile into different kingdoms (or user-defined taxonomic groups).
+  rank -- split the taxonomic profile into different taxonomic ranks.
+  count -- count the reads number and taxa number after each filter.
+  megan -- generate file for MEGAN input.
+  krona -- generate file for krona input.
+  heatmap -- generate heatmaps.
+  barplot -- generate barplots.
+  stratplot -- generate stratplots
+  rarefy -- perform the random rarefaction analysis.
+  NMDS -- perform the NMDS rarefaction analysis.
 
-thr2 -- minimum summed reads number required across all samples for a taxa, default: thr2=5
+metadata -- path to your metadata
+  The supplied metadata should be in a tab (\t) separated format, and containing three columns. In which the first column contains a list of all lca file names, second column should contain the desired naming of the samples in the illustrations, and third column should be a numeric value that can order samples (age, depth or rank, interval are not allowed). An example "metadata.txt" can be found under the "R_script" folder.
+
+threshold.1 -- minimum reads number required for confirming a taxon in each sample
+
+threshold.2 -- minimum reads percentage (to the total reads number of the sample) required for confirming a taxon in each sample, ranging from 0 to 1
+
+threshold.3 -- minimum summed reads number across all samples required for confirming a taxon in the combined taxonomic profile
+
+threshold.1_blank -- same as threshold.1, but for filtering the blank controls; will using the value of threshold.1 if not specified
+
+threshold.2_blank -- same as threshold.2, but for filtering the blank controls; will using the value of threshold.2 if not specified
+
+threshold.3_blank -- same as threshold.3, but for filtering the blank controls; will using the value of threshold.3 if not specified
  
-thr3 -- minimum percentage of reads for a taxon relative to the sum of reads within a group, range from 0 to 1, default: thr3=0    
+remove.taxa -- a list of NCBI taxaID indicating the taxa that will be removed from final results
 
-metadata -- full path to your metadata, optional
+remove.sample -- a list of file names indicating the samples that will be removed from the final results
 
-taxa.re -- a list of NCBI taxaID representing the taxa that will be removed from final results, taxaID can be found at https://www.ncbi.nlm.nih.gov/Taxonomy, for example inputting taxa="1,131567" will remove "root" with taxaID 1 and "cellular organisms" with taxaID 131567
+group.name -- higher taxonomic units that will be used for grouping the taxa, need to be as the scientific names in NCBI taxonomy
 
-sample.re -- a list of lca file names that will not be included in the final results, sample.re="file1.lca,file5.lca"
+rank.name -- taxonomic ranks that will be used for clustering the taxa
 
-group.name -- higher taxonomic ranks that will be used for grouping taxa, format: "NCBI taxaID:Scientific name"; default: group.name="10239:Viruses,2157:Archaea,2:Bacteria,4751:Fungi,33090:Viridiplantae,33208:Metazoa"
+threshold.perGroup -- minimum reads percentage (to the total reads number of each group) required for confirming a taxon in each sample, ranging from 0 to 1
 
-top.abundance -- how many most abundant taxa will be illustrated in figs, default: top.abundance=50
+top.abundance -- number of most abundant taxa that will be illustrated in figs
+
+NMDS_trymax -- maximum numbers of random starts in search of convergent solutions for NMDS
+
+
+## Results
+
+intermediate -- intermediate files, containing the taxonomic profile after each filtering
+taxonomic_profiles -- tab separated tables for all the cleaned taxonomic profiles
+counts -- reads and taxa number statistics for each sample
+megan -- generated files for MEGAN input
+krona -- generated files for krona input
+heatmap -- generated heatmaps
+barplot -- generated barplots
+stratplot -- generated stratplots
+rarefaction -- random rarefaction curves
+NMDS -- NMDS analysis output data and figures
