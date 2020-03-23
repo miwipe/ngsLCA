@@ -102,7 +102,9 @@ This script requires all .lca files to be located in the same working directory.
 
 An example for running ngsLCA_interpret.R:
 ```
-Rscript ngsLCA/R_script/ngsLCA_interpret.R path="working_directory" metadata="path_to_metadata/metadata.txt"
+Rscript ngsLCA/R_script/ngsLCA_interpret.R path="working_directory" path_blank="directory_containing_blank_control_lca" \
+output = "result1" task = "pre-process,filter,de-contamination,group,rank,count,megan,krona,heatmap,barplot" \
+metadata="path_to_metadata/metadata.txt" threshold.1=5 threshold.2=0.001 threshold.3=5  
 ```
 
 ## Parameters
