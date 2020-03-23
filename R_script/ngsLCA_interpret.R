@@ -191,6 +191,9 @@ thr1=as.numeric(threshold.1)
 thr2=as.numeric(threshold.2)
 thr3=as.numeric(threshold.3)
 thrG=as.numeric(threshold.perGroup)
+top.abundance=as.numeric(top.abundance)
+NMDS_trymax=as.numeric(NMDS_trymax)
+
 
 if (is.na(threshold.1_blank)) {
   threshold.1_blank = thr1
@@ -375,7 +378,7 @@ if ("pre-process" %in% func) {
 ######################################
 if ("filter" %in% func) {
   
-  cat("\n\n\t-> filtering the taxonomic profile\n\n")
+  cat("\n\n\t-> filter the taxonomic profile\n\n")
   
   if (length(dir(paste(path, output, "/intermediate/", sep=""),pattern =  "taxa_profile_v1.txt")) == 0) {
     cat("\n\n\t-> Required file not found in the appointed directory, please run the 'pre-process' first \n\n")
@@ -489,7 +492,7 @@ if ("filter" %in% func) {
 ######################################
 if ("de-contamination" %in% func) {
   
-  cat("\n\n\t-> removing taxa detected in the contamination list\n\n")
+  cat("\n\n\t-> remove taxa detected in the contamination list\n\n")
   
   if (length(dir(paste(path, output, "/intermediate/", sep=""),pattern="taxa_profile_v2.3.txt")) == 0) {
     cat("\n\n\t-> Required file not found in the appointed directory, please run the 'pre-process' and 'filter' first \n\n")
@@ -590,7 +593,7 @@ GroupTaxa = function(DF, TaxaUnit){
 #group
 if ("group"%in%func) {
   
-  cat("\n\n\t-> grouping taxa\n\n")
+  cat("\n\n\t-> group taxa\n\n")
   
   dir.create(paste(path,output, "/taxonomic_profiles/taxa_groups", sep=""))
   dir.create(paste(path,output, "/intermediate/taxa_groups", sep=""))
@@ -645,7 +648,7 @@ Taxa.cluster = function(DF, OutName){
 if ("rank"%in%func) {
   
   dir.create(paste(path, output, "/taxonomic_profiles/taxa_ranks", sep=""))
-  cat("\n\n\t-> clustering taxa into taxonomic ranks\n\n")
+  cat("\n\n\t-> cluster taxa into taxonomic ranks\n\n")
   
   DF = read.csv(paste(path, output, "/intermediate/", "taxa_profile_v3.txt", sep=""),sep="\t", 
                 quote="", check.names=F,stringsAsFactors=F)
@@ -772,6 +775,7 @@ if ("count"%in%func) {
     D2 = data.frame(step=colnames(TaxaNO)[-1],
                     number=as.numeric(TaxaNO[i,-1]),
                     stringsAsFactors = F)
+    D2$step = factor(D2$step, as.character(D2$step),ordered = T)
     
     Name = ReadNO$sample[i]
     
@@ -949,7 +953,7 @@ HeatMap = function(DF){
   DF = as.matrix(DF)
   if (length(which(colSums(DF) == 0))>0) {
     F1 = Heatmap(DF, column_dend_height = unit(1.5, "cm"), row_dend_width = unit(3, "cm"), show_row_names = T, show_column_names = T,
-                 row_names_gp = gpar(cex=0.4), column_names_gp = gpar(cex=0.5), cluster_rows = T, cluster_columns= F, 
+                 row_names_gp = gpar(cex=0.8), column_names_gp = gpar(cex=0.8), cluster_rows = T, cluster_columns= F, 
                  clustering_distance_rows = "pearson", clustering_distance_columns = "pearson",
                  col = colorRamp2(c(0, 0.001, 0.01, 0.03, 0.06, 0.2), 
                                   c("white", "cornflowerblue", "yellow", "#FD8D3C","#E31A1C","#B10026")),
@@ -958,7 +962,7 @@ HeatMap = function(DF){
                                              legend_height = unit(10, "cm"), color_bar = "continous"))
   }else{
     F1 = Heatmap(DF, column_dend_height = unit(1.5, "cm"), row_dend_width = unit(3, "cm"), show_row_names = T, show_column_names = T,
-                 row_names_gp = gpar(cex=0.4), column_names_gp = gpar(cex=0.5), cluster_rows = T, cluster_columns= T, 
+                 row_names_gp = gpar(cex=0.8), column_names_gp = gpar(cex=0.8), cluster_rows = T, cluster_columns= T, 
                  clustering_distance_rows = "pearson",clustering_distance_columns = "pearson",
                  col = colorRamp2(c(0, 0.001, 0.01, 0.03, 0.06, 0.2), 
                                   c("white", "cornflowerblue", "yellow", "#FD8D3C","#E31A1C","#B10026")),
@@ -975,6 +979,10 @@ dataPrep = function(DF){
   if (length(which(duplicated(DF[,2])))>0) {
     N=which(DF[,2] %in% DF[which(duplicated(DF[,2])),2])
     DF[N,2] = paste(DF[N,2],DF[N,3],sep="_")
+    if (length(which(duplicated(DF[,2])))>0) {
+      N=which(DF[,2] %in% DF[which(duplicated(DF[,2])),2])
+      DF[N,2] = paste(DF[N,1],DF[N,2],sep="_")
+    }
   }
 
   row.names(DF) = DF[,2]
@@ -1270,6 +1278,11 @@ if ("stratplot"%in%func) {
   if (dim(X2)[1]>top.abundance) {
     X2 = X2[order(rowSums(X2),decreasing = T)[1:top.abundance],]
   }
+  
+  if (dim(X2)[1]>30) {
+    cat("\n\n\t-> top.abundance is too high for valid stratplots; will illustrating the top 30 taxa only\n\n")
+    X2 = X2[order(rowSums(X2),decreasing = T)[1:30],]
+  }
 
   X2 = as.data.frame(t(X2),stringsAsFactors = F)
   pdf(paste(path, output, "/stratplot/all_taxa_stratplot.pdf", sep=""), width=15, height=8)
@@ -1302,9 +1315,9 @@ if ("stratplot"%in%func) {
       Name = sub(".txt", "", file.list[i])
       
       pdf(paste(path, output, "/stratplot/",Name,"_stratplot.pdf", sep=""), width=15, height=8)
-      strat.plot(X2, y.rev=T, plot.line=F, plot.poly=T, plot.bar=T, col.bar="black", 
-                       col.poly=c(rep("forestgreen",dim(X2)[2])),col.poly.line="black", 
-                       scale.percent=TRUE, xSpace=0.01, x.pc.lab=TRUE, x.pc.omit0=TRUE, las=2)
+      p <- strat.plot(X2, plot.bar = TRUE, plot.line = TRUE, plot.poly = F, y.rev=TRUE, col.poly.line='dark green', 
+                      col.poly='dark green', col.bar = 'dark green', title="viridiplantae", ylabel="Strata", 
+                      srt.xlabel = 45, xSpace = 0.003, lwd.bar = 3)
       dev.off()
     }
   }
