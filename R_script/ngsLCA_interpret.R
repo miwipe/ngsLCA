@@ -271,15 +271,16 @@ ReadIn = function(FileList,path){
   
   #replcing the file names with metadata
   if(!is.na(metadata)){
-    Mdata = read.csv(metadata, quote="", stringsAsFactors=F, header=F,sep = "\t")
+    Mdata = read.csv(metadata, quote="", stringsAsFactors=F, header=F,sep = "\t",comment.char = "#")
     Mdata$V1 = sub(".lca","",Mdata$V1)
     Mdata = Mdata[order(Mdata$V3),]
     
     N = 0
-    for (i in 2:dim(X1)[2]) {
-      if (length(which(colnames(X1)[i] %in% Mdata$V1))>0) {
-        colnames(X1)[i] = Mdata$V2[which(Mdata$V1 %in% colnames(X1)[i])]
-        N = c(N,i)
+    for (i in 1:dim(Mdata)[1]) {
+      M = which(colnames(X1)[-1] %in%  Mdata$V1[i])
+      if (length(M)>0) {
+        colnames(X1)[M+1] = Mdata$V2[i]
+        N = c(N,M+1)
       }
     }
     
@@ -1280,17 +1281,36 @@ if ("stratplot"%in%func) {
   }
   
   if (dim(X2)[1]>30) {
-    cat("\n\n\t-> top.abundance is too high for valid stratplots; will illustrating the top 30 taxa only\n\n")
+    cat("\n\n\t-> top.abundance is too high for valid stratplots; will only illustrate the top 30 taxa\n\n")
     X2 = X2[order(rowSums(X2),decreasing = T)[1:30],]
   }
 
   X2 = as.data.frame(t(X2),stringsAsFactors = F)
-  pdf(paste(path, output, "/stratplot/all_taxa_stratplot.pdf", sep=""), width=15, height=8)
-  strat.plot(X2, y.rev=T, plot.line=F, plot.poly=T, plot.bar=T, col.bar="black", 
-             col.poly=c(rep("forestgreen",dim(X2)[2])),col.poly.line="black", 
-             scale.percent=TRUE, xSpace=0.01, x.pc.lab=TRUE, x.pc.omit0=TRUE, las=2)
-  dev.off()
-
+  
+  widthF=10
+  if (dim(X2)[2]>10) {
+    widthF=20
+  }
+  if(dim(X2)[2]>20) {
+    widthF=30
+  }
+  
+  yname=as.numeric(rownames(X2))
+  
+  if (any(is.na(yname))) {
+    pdf(paste(path, output, "/stratplot/all_taxa_stratplot.pdf", sep=""), width=widthF, height=8)
+    strat.plot(X2, plot.bar = T, plot.line = T, plot.poly = F, y.rev=T, col.poly.line='dark green', 
+               col.poly='dark green', col.bar = 'dark green', title="All taxa", ylabel="Order",
+               srt.xlabel = 45, xSpace = 0.003, lwd.bar = 3)
+    dev.off()
+  }else{
+    pdf(paste(path, output, "/stratplot/all_taxa_stratplot.pdf", sep=""), width=widthF, height=8)
+    strat.plot(X2, plot.bar = T, plot.line = T, plot.poly = F, y.rev=T, col.poly.line='dark green', 
+               col.poly='dark green', col.bar = 'dark green', title="All taxa", yvar=yname,
+               srt.xlabel = 45, xSpace = 0.003, lwd.bar = 3)
+    dev.off()
+  }
+  
   if (length(dir(paste(path, output, "/taxonomic_profiles/taxa_ranks",sep=""), pattern = ".txt"))>0){
     
     file.list = dir(paste(path, output, "/taxonomic_profiles/taxa_ranks",sep=""), pattern = ".txt")
@@ -1311,14 +1331,37 @@ if ("stratplot"%in%func) {
         X2 = X2[order(rowSums(X2),decreasing = T)[1:top.abundance],]
       }
       
+      if (dim(X2)[1]>30) {
+        X2 = X2[order(rowSums(X2),decreasing = T)[1:30],]
+      }
+
       X2 = as.data.frame(t(X2),stringsAsFactors = F)
+      
+      widthF=10
+      if (dim(X2)[2]>10) {
+        widthF=20
+      }
+      if(dim(X2)[2]>20) {
+        widthF=30
+      }
+      
       Name = sub(".txt", "", file.list[i])
       
-      pdf(paste(path, output, "/stratplot/",Name,"_stratplot.pdf", sep=""), width=15, height=8)
-      p <- strat.plot(X2, plot.bar = TRUE, plot.line = TRUE, plot.poly = F, y.rev=TRUE, col.poly.line='dark green', 
-                      col.poly='dark green', col.bar = 'dark green', title="viridiplantae", ylabel="Strata", 
-                      srt.xlabel = 45, xSpace = 0.003, lwd.bar = 3)
-      dev.off()
+      yname=as.numeric(rownames(X2))
+      
+      if (any(is.na(yname))) {
+        pdf(paste(path, output, "/stratplot/",Name,"_stratplot.pdf", sep=""), width=widthF, height=8)
+        strat.plot(X2, plot.bar = T, plot.line = T, plot.poly = F, y.rev=T, col.poly.line='dark green', 
+                   col.poly='dark green', col.bar = 'dark green', title=Name, ylabel="Order",
+                   srt.xlabel = 45, xSpace = 0.003, lwd.bar = 3)
+        dev.off()
+      }else{
+        pdf(paste(path, output, "/stratplot/",Name,"_stratplot.pdf", sep=""), width=widthF, height=8)
+        strat.plot(X2, plot.bar = T, plot.line = T, plot.poly = F, y.rev=T, col.poly.line='dark green', 
+                   col.poly='dark green', col.bar = 'dark green', title=Name, yvar=yname,
+                   srt.xlabel = 45, xSpace = 0.003, lwd.bar = 3)
+        dev.off()
+      }
     }
   }
 }
@@ -1326,4 +1369,3 @@ if ("stratplot"%in%func) {
 #End
 ######################################
 ######################################
-
