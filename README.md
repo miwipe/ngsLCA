@@ -153,13 +153,13 @@ task -- functions that will be performed, the "pre-process" and "filter" need to
 ###### NMDS -- perform the NMDS rarefaction analysis.
 
 metadata -- path to your metadata
-###### The supplied metadata should be in a tab (\t) separated format, and containing three columns. In which the first column contains a list of all lca file names, second column should contain the desired naming of the samples in the illustrations, and third column should be a numeric value that can order samples (age, depth or rank, interval are not allowed). An example "metadata.txt" can be found under the "R_script" folder.
+###### The supplied metadata should be in a tab (\t) separated format, and contain three columns. In which the first column contains a list of all lca file names, second column should contain the desired naming of the samples in the illustrations, and third column should be a numeric value that can order samples (age, depth or rank, interval are not allowed). An example "metadata.txt" can be found under the "R_script" folder.
 
 threshold.1 -- minimum reads number required for confirming a taxon in each sample
 
-threshold.2 -- minimum reads percentage (to the total reads number of the sample) required for confirming a taxon in each sample, ranging from 0 to 1
+threshold.2 -- minimum read percentage (to the total reads number of the sample) required for confirming a taxon in each sample, ranging from 0 to 1
 
-threshold.3 -- minimum summed reads number across all samples required for confirming a taxon in the combined taxonomic profile
+threshold.3 -- minimum summ of reads across all samples required for confirming a taxon in the combined taxonomic profile
 
 threshold.1_blank -- same as threshold.1, but for filtering the blank controls; will using the value of threshold.1 if not specified
 
