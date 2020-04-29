@@ -311,7 +311,7 @@ void hts(FILE *fp,samFile *fp_in,int2int &i2i,int2int& parent,bam_hdr_t *hdr,int
   int2int closest_species;
   int skip=0;
   int inc=0;
-  while(sam_read1(fp_in,hdr,aln) > 0) {
+  while(sam_read1(fp_in,hdr,aln) >= 0) {
     char *qname = bam_get_qname(aln);
     int chr = aln->core.tid ; //contig name (chromosome)
     //    fprintf(stderr,"%d %d\n",aln->core.qual,minmapq);
