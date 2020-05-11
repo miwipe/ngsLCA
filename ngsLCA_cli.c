@@ -20,6 +20,7 @@ pars *pars_init(){
   p->outnames="outnames";
   p->minmapq=0;
   p->discard=516;//discard unmapped and read fail
+  p->gz_sam = Z_NULL;
   return p;
 }
 
@@ -43,6 +44,7 @@ pars *get_pars(int argc,char **argv){
     
     if(!strcasecmp("-bam",key)) p->htsfile=strdup(val);
     else if(!strcasecmp("-names",key)) p->namesfile=strdup(val);
+    else if(!strcasecmp("-sam_noheader",key)) p->gz_sam=gzopen(val,"r");
     else if(!strcasecmp("-nodes",key)) p->nodesfile=strdup(val);
     else if(!strcasecmp("-acc2tax",key)) p->acc2taxfile=strdup(val);
     else if(!strcasecmp("-editdistMin",key)) p->editdistMin=atoi(val);

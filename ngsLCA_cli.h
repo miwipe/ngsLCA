@@ -3,12 +3,13 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-
+#include <zlib.h>
 #include <htslib/sam.h>
   
 typedef struct{
   //filenames
   char *htsfile;//bam,cram,sam
+  gzFile gz_sam;//used for sam without header
   char *nodesfile;
   char *namesfile;
   char *acc2taxfile;
