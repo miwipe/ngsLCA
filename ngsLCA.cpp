@@ -70,7 +70,10 @@ void strip(char *line){
 
  
 void * bamRefId2tax(const char *fname,bam_hdr_t *hdr ){
-  fprintf(stderr,"\t-> bam_hdr_t: %p \n",hdr->n_targets,hdr);
+  FILE *FP=NULL;
+  if(0)
+    FP=fopen("delmeme.bin","wb");
+  fprintf(stderr,"\t-> bam_hdr_t: %p \n",hdr);
   int2int *am=NULL;
   char2int *cm = NULL;
   
@@ -87,10 +90,12 @@ void * bamRefId2tax(const char *fname,bam_hdr_t *hdr ){
   }
   char buf[4096];
   int at=0;
+  char buf2[4096];
   while(gzgets(gz,buf,4096)){
     if(!((at++ %100000 ) ))
       if(isatty(fileno(stderr)))
 	fprintf(stderr,"\r\t-> At linenr: %d in \'%s\'      ",at,fname);
+    strcpy(buf2,buf);
     strtok(buf,"\t\n ");
     char *key =strtok(NULL,"\t\n ");
     int val = atoi(strtok(NULL,"\t\n "));
@@ -98,12 +103,14 @@ void * bamRefId2tax(const char *fname,bam_hdr_t *hdr ){
       if(cm->find(key)!=cm->end())
 	fprintf(stderr,"\t-> Duplicate entries found \'%s\'\n",key);
       (*cm)[strdup(key)]=val;
+ 
     }else{
       //check if the key exists in the bamheader, if not then skip this taxid
       int valinbam = bam_name2id(hdr,key);
       if(valinbam==-1)
 	continue;
-      
+      if(FP)
+	fwrite(buf2,1,strlen(buf2),FP);     
       if(am->find(valinbam)!=am->end())
 	fprintf(stderr,"\t-> Duplicate entries found \'%s\'\n",key);
       else{
@@ -112,6 +119,8 @@ void * bamRefId2tax(const char *fname,bam_hdr_t *hdr ){
     }
 
   }
+  if(FP)
+    fclose(FP);
   fprintf(stderr,"\n");
 
   if(hdr!=NULL){
