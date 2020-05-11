@@ -63,12 +63,13 @@ pars *get_pars(int argc,char **argv){
     
     ++argv;
   }
-  fprintf(stderr,"\t-> Will read header\n");
-  p->hts = hts_open(p->htsfile,"r");
-  p->header = sam_hdr_read(p->hts);
-  assert(p->header);
-  fprintf(stderr,"\t-> Done reading header\n");
-
+  if(p->gz_sam==Z_NULL){
+    fprintf(stderr,"\t-> Will read header\n");
+    p->hts = hts_open(p->htsfile,"r");
+    p->header = sam_hdr_read(p->hts);
+    assert(p->header);
+    fprintf(stderr,"\t-> Done reading header\n");
+  }
   char buf[1024];
   snprintf(buf,1024,"%s.lca",p->outnames);
   fprintf(stderr,"\t-> Will output lca results in file:\t\t\'%s\'\n",buf);

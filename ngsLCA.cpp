@@ -69,9 +69,16 @@ void strip(char *line){
 
 
  
-int2int bamRefId2tax(const char *fname,bam_hdr_t *hdr ){
-  fprintf(stderr,"\t-> Number of SQ tags:%d \n",hdr->n_targets);
-  int2int am;
+void * bamRefId2tax(const char *fname,bam_hdr_t *hdr ){
+  fprintf(stderr,"\t-> bam_hdr_t: %p \n",hdr->n_targets,hdr);
+  int2int *am=NULL;
+  char2int *cm = NULL;
+  
+  if(hdr!=NULL)
+    am = new int2int;
+  else
+    cm = new char2int;
+  
   gzFile gz= Z_NULL;
   gz=gzopen(fname,"rb");
   if(gz==Z_NULL){
@@ -80,11 +87,6 @@ int2int bamRefId2tax(const char *fname,bam_hdr_t *hdr ){
   }
   char buf[4096];
   int at=0;
-  FILE *fp = NULL;
-  if(0){
-    fp=fopen("dmp.dmp.deleteme","w");
-    assert(fp);
-  }
   while(gzgets(gz,buf,4096)){
     if(!((at++ %100000 ) ))
       if(isatty(fileno(stderr)))
@@ -92,26 +94,33 @@ int2int bamRefId2tax(const char *fname,bam_hdr_t *hdr ){
     strtok(buf,"\t\n ");
     char *key =strtok(NULL,"\t\n ");
     int val = atoi(strtok(NULL,"\t\n "));
-
-    //check if the key exists in the bamheader, if not then skip this taxid
-    int valinbam = bam_name2id(hdr,key);
-    if(valinbam==-1)
-      continue;
-    
-    if(am.find(valinbam)!=am.end())
-      fprintf(stderr,"\t-> Duplicate entries found \'%s\'\n",key);
-    else{
-      am[valinbam] = val;
-      if(fp)
-	fprintf(fp,"val\t%s\t%d\tjunk\n",key,val);
+    if(hdr==NULL){
+      if(cm->find(key)!=cm->end())
+	fprintf(stderr,"\t-> Duplicate entries found \'%s\'\n",key);
+      (*cm)[strdup(key)]=val;
+    }else{
+      //check if the key exists in the bamheader, if not then skip this taxid
+      int valinbam = bam_name2id(hdr,key);
+      if(valinbam==-1)
+	continue;
+      
+      if(am->find(valinbam)!=am->end())
+	fprintf(stderr,"\t-> Duplicate entries found \'%s\'\n",key);
+      else{
+	(*am)[valinbam] = val;
+      }
     }
 
   }
   fprintf(stderr,"\n");
-  fprintf(stderr,"\t-> [%s] Number of entries to use from accesion to taxid: %lu\n",fname,am.size());
-  if(fp)
-    fclose(fp);
-  return am;
+
+  if(hdr!=NULL){
+    fprintf(stderr,"\t-> [%s] Number of entries to use from accesion to taxid: %lu\n",fname,am->size());
+    return am;
+  }else{
+    fprintf(stderr,"\t-> [%s] Number of entries to use from accesion to taxid: %lu\n",fname,cm->size());
+    return cm;
+  }
 }
 
 int nodes2root(int taxa,int2int &parent){
@@ -627,8 +636,12 @@ int main(int argc, char **argv){
   fprintf(p->fp1,"\n");
   //map of bamref ->taxid
 
-  int2int i2i= bamRefId2tax(p->acc2taxfile,p->header);
- 
+  int2int *i2i=NULL;
+  char2int *c2i=NULL;
+  if(p->header)
+    i2i=(int2int*) bamRefId2tax(p->acc2taxfile,p->header);
+  else
+    c2i=(char2int*) bamRefId2tax(p->acc2taxfile,p->header);
   //map of taxid -> taxid
   int2int parent;
   //map of taxid -> rank
@@ -638,7 +651,7 @@ int main(int argc, char **argv){
   parse_nodes(p->nodesfile,rank,parent);
   //  calc_valens(i2i,parent);
   if(0){
-    print_ref_rank_species(p->header,i2i,name_map,rank);
+    print_ref_rank_species(p->header,*i2i,name_map,rank);
     return 0;
   }
 
@@ -650,7 +663,7 @@ int main(int argc, char **argv){
   fprintf(stderr,"\t-> Will add some fixes of the ncbi database due to merged names\n");
   mod_db(mod_in,mod_out,parent,rank,name_map);
 
-  hts(p->fp1,p->hts,i2i,parent,p->header,rank,name_map,p->fp3,p->minmapq,p->discard,p->editdistMin,p->editdistMax,p->simscoreLow,p->simscoreHigh);  
+  hts(p->fp1,p->hts,*i2i,parent,p->header,rank,name_map,p->fp3,p->minmapq,p->discard,p->editdistMin,p->editdistMax,p->simscoreLow,p->simscoreHigh);  
   fprintf(stderr,"\t-> Number of species with reads that map uniquely: %lu\n",specWeight.size());
   
   for(int2int::iterator it=errmap.begin();it!=errmap.end();it++)
