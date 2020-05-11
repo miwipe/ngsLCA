@@ -15,13 +15,18 @@ int mod_out[]=  {1333996 , 1333996 ,1582270,1914213,1917265,1915309 ,263865,2801
 #include <pthread.h>
 #include <algorithm>
 #include <errno.h>
+#include <sys/stat.h>
 #include "ngsLCA.h"
 #include "ngsLCA_cli.h"
 #include "ngsLCA_format.h"
-int2int i2i; //refid to taxid
+
 int2int specWeight;// Number of reads that map uniquely to a species.
 int2int i2i_missing;//contains counter of missing hits for each taxid that doesnt exists in acc2taxid
 
+int fexists(const char* str){///@param str Filename given as a string.
+  struct stat buffer ;
+  return (stat(str, &buffer )==0 ); /// @return Function returns 1 if file exists.
+}
 
 void mod_db(int *in,int *out,int2int &parent, int2char &rank,int2char &name_map){
   for(int i=0;i<24;i++){
