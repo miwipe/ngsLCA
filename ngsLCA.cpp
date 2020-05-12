@@ -22,6 +22,7 @@ int mod_out[]=  {1333996 , 1333996 ,1582270,1914213,1917265,1915309 ,263865,2801
 
 int2int specWeight;// Number of reads that map uniquely to a species.
 int2int i2i_missing;//contains counter of missing hits for each taxid that doesnt exists in acc2taxid
+char2int c2i_missing;//contains counter of missing hits for each taxid that doesnt exists in acc2taxid
 
 int fexists(const char* str){///@param str Filename given as a string.
   struct stat buffer ;
@@ -478,6 +479,181 @@ void hts(FILE *fp,samFile *fp_in,int2int &i2i,int2int& parent,bam_hdr_t *hdr,int
   return ;//0;
 }
 
+void hts2(FILE *fp,gzFile fp_in,char2int &c2i,int2int& parent,bam_hdr_t *hdr,int2char &rank, int2char &name_map,FILE *log,int minmapq,int discard,int editMin, int editMax, double scoreLow,double scoreHigh){
+  fprintf(stderr,"\t-> editMin:%d editmMax:%d scoreLow:%f scoreHigh:%f\n",editMin,editMax,scoreLow,scoreHigh);
+  assert(fp_in!=NULL);
+  int comp ;
+
+  char *last=NULL;
+  char *seq =NULL;
+  std::vector<int> taxids;
+  std::vector<int> specs;
+  std::vector<int> editdist;
+  int lca;
+  int2int closest_species;
+  int skip=0;
+  int inc=0;
+  char buf[4096];
+  while(gzgets(fp_in,buf,4096)) {
+
+    char *qname = strtok(buf,"\t\n ");
+    int flag = atoi(strtok(NULL,"\t\n "));
+    char *chromo = strtok(NULL,"\t\n ");
+    strtok(NULL,"\t\n ");//pos
+    int mapq = atoi(strtok(NULL,"\t\n "));
+    strtok(NULL,"\t\n ");//cigar
+    strtok(NULL,"\t\n ");//rnext
+    strtok(NULL,"\t\n ");//pnext
+    strtok(NULL,"\t\n ");//tlen
+    char *thisseq=strtok(NULL,"\t\n ");//tlen
+    char *thisqual=strtok(NULL,"\t\n ");//tlen
+    //    char *tail=strtok(NULL,"\t\n ");//tlen
+    //fprintf(stderr,"tail:%s\n",tail);
+    //    fprintf(stderr,"%d %d\n",aln->core.qual,minmapq);
+    if(mapq<minmapq){
+      fprintf(stderr,"discarding due to low mapq");
+      continue;
+    }
+    //    fprintf(stderr,"Discard: %d coreflag:%d OR %d\n",discard,aln->core.flag,aln->core.flag&discard);
+    if(discard>0&&(flag&discard)){
+      fprintf(stderr,"Discardding due to core flag\n");
+      continue;
+    }
+    if(last==NULL){
+      last=strdup(qname);
+      seq=strdup(thisseq);
+    }
+
+    //change of ref
+    if(strcmp(last,qname)!=0) {
+      if(taxids.size()>0&&skip==0){
+	//	fprintf(stderr,"length of taxids:%lu and other:%lu minedit:%d\n",taxids.size(),editdist.size(),*std::min_element(editdist.begin(),editdist.end()));
+	
+	int size=taxids.size();
+	if(editMin==-1&&editMax==-1)
+	  taxids = purge(taxids,editdist);
+
+	lca=do_lca(taxids,parent);
+	if(lca!=-1){
+	  fprintf(fp,"%s:%s:%lu:%d",last,seq,strlen(seq),size);//fprintf(stderr,"size:%d\n");
+	  //	  fprintf(stderr,"adfsadfsafafdad: %d size\n",size);
+	  print_chain(fp,lca,parent,rank,name_map);
+	  int varisunique = isuniq(specs);
+	  //fprintf(stderr,"varisunquieu:%d spec.size():%lu\n",varisunique,specs.size());
+	  if(varisunique){
+	    int2int::iterator it=specWeight.find(specs[0]);
+	    //fprintf(stderr,"specs: %d specs.size:%lu wiehg.szei():%lu\n",specs[0],specs.size(),specWeight.size());
+	    if(it==specWeight.end())
+	      specWeight[specs[0]] = 1;//specs.size();
+	    else
+	      it->second = it->second +1;
+	    
+	    //fprintf(stderr,"specs.size:%lu wiehg.szei():%lu\n",specs.size(),specWeight.size());
+	  }
+
+
+	}
+      }
+      skip=0;
+      specs.clear();
+      editdist.clear();
+      free(last);
+      free(seq);
+      last=strdup(qname);
+      seq=strdup(thisseq);
+    }
+    
+    //filter by nm
+    int thiseditdist=-1;
+    char *tok;
+    char *nm;
+    while(((tok=strtok(NULL,"\t\n ")))){
+      nm = strstr(tok,"NM:i:");
+      if(nm)
+	break;
+    }
+
+    if(nm!=NULL){
+      assert(sscanf(nm,"NM:i:%d",&thiseditdist)==1);
+      if(editMin!=-1&&thiseditdist<editMin){
+	skip=1;
+	//fprintf(stderr,"skipped1\n");
+	continue;
+      }else if(editMax!=-1&&thiseditdist>editMax){
+	//fprintf(stderr,"continued1\n");
+	continue;
+      }
+      double seqlen=strlen(thisseq);
+      double myscore=1.0-(((double) thiseditdist)/seqlen);
+      //      fprintf(stderr," score:%f\t",myscore);
+      if(myscore>scoreHigh){
+	//fprintf(stderr,"skipped2\n");
+	skip=1;
+	continue;
+      }
+      else if(myscore<scoreLow){	
+	//	fprintf(stderr,"continued2\n");
+	continue;
+      }
+    }
+    char2int::iterator it = c2i.find(chromo);
+    //See if cloests speciest exists and plug into closests species
+    int dingdong=-1;
+    if(it!=c2i.end()) {
+      int2int::iterator it2=closest_species.find(it->second);
+      if(it2!=closest_species.end())
+	dingdong=it->second;
+      else{
+	dingdong=get_species1(it->second,parent,rank);
+	if(dingdong!=-1)
+	  closest_species[it->second]=dingdong;
+      }
+      //fprintf(stderr,"\t-> closests size:%lu\n",closest_species.size());
+    }
+
+    if(it==c2i.end()||dingdong==-1){
+      char2int::iterator it2missing = c2i_missing.find(chromo);
+      if(it2missing==c2i_missing.end()){
+	fprintf(log,"\t-> problem finding chrid:%s chrname:%s\n",chromo,chromo);
+	c2i_missing[chromo] = 1;
+      }else
+	it2missing->second = it2missing->second + 1;
+    }else{
+            
+      taxids.push_back(it->second);
+      specs.push_back(dingdong);
+      editdist.push_back(thiseditdist);
+      //fprintf(stderr,"it-.second:%d specs:%d thiseditdist:%d\n",it->second,dingdong,thiseditdist);
+      //      fprintf(stderr,"EDIT\t%d\n",thiseditdist);
+    }
+  }
+  if(taxids.size()>0&&skip==0){
+    int size=taxids.size();
+    if(lca!=-1){
+      if(editMin==-1&&editMax==-1)
+	taxids = purge(taxids,editdist);
+      
+      lca=do_lca(taxids,parent);
+      if(lca!=-1){
+	fprintf(fp,"%s:%s:%lu:%d",last,seq,strlen(seq),size);
+	print_chain(fp,lca,parent,rank,name_map);
+	if(isuniq(specs)){
+	  int2int::iterator it=specWeight.find(specs[0]);
+	  if(it==specWeight.end())
+	    specWeight[specs[0]] = specs.size();
+	  else
+	    it->second = it->second +specs.size();
+	  
+	}
+      }
+    }
+  }
+  specs.clear();
+  editdist.clear();
+  gzclose(fp_in);
+  return ;//0;
+}
+
 int2char parse_names(const char *fname){
 
   gzFile gz= Z_NULL;
@@ -672,7 +848,10 @@ int main(int argc, char **argv){
   fprintf(stderr,"\t-> Will add some fixes of the ncbi database due to merged names\n");
   mod_db(mod_in,mod_out,parent,rank,name_map);
 
-  hts(p->fp1,p->hts,*i2i,parent,p->header,rank,name_map,p->fp3,p->minmapq,p->discard,p->editdistMin,p->editdistMax,p->simscoreLow,p->simscoreHigh);  
+  if(p->gz_sam==NULL)
+    hts(p->fp1,p->hts,*i2i,parent,p->header,rank,name_map,p->fp3,p->minmapq,p->discard,p->editdistMin,p->editdistMax,p->simscoreLow,p->simscoreHigh);
+  else
+    hts2(p->fp1,p->gz_sam,*c2i,parent,p->header,rank,name_map,p->fp3,p->minmapq,p->discard,p->editdistMin,p->editdistMax,p->simscoreLow,p->simscoreHigh);
   fprintf(stderr,"\t-> Number of species with reads that map uniquely: %lu\n",specWeight.size());
   
   for(int2int::iterator it=errmap.begin();it!=errmap.end();it++)
