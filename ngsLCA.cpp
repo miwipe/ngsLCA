@@ -856,8 +856,10 @@ int main(int argc, char **argv){
   
   for(int2int::iterator it=errmap.begin();it!=errmap.end();it++)
     fprintf(p->fp3,"err\t%d\t%d\n",it->first,it->second);
+#if 0
   for(int2int::iterator it=i2i_missing.begin();it!=i2i_missing.end();it++)
     fprintf(p->fp3,"missingtaxid \t%d\t%d\t%s\n",it->first,it->second,p->header[it->first]);
+#endif
   //p->header points to bam_hdr_t what is expected here?
   for(int2int::iterator it=specWeight.begin();0&&it!=specWeight.end();it++)
     fprintf(p->fp2,"%d\t%s\t%d\n",it->first,name_map[it->first],it->second);
