@@ -42,7 +42,7 @@ bowtie2-build --threads 5 plastids.fa plastids
 bowtie2 --threads 10 -k 5000 -x refseq_plastids/plastids -U fastq_file.fq --no-unal | samtools view -bS - > file_name.database_name.bam
 ```
 
-4. If more than one database have been used as reference all resulting bam files needs to be merged and sorted using samtools (important as the LCA assumes that all unique readIDs are aligned next to each other). See example below:
+4. If more than one database has been used as reference all resulting bam files needs to be merged and sorted using samtools (important as the LCA assumes that all unique readIDs are aligned next to each other). See example below:
 
 ```
 samtools merge -@ 10 -n merged.out.bam *.bam
@@ -61,7 +61,7 @@ gunzip nucl_gb.accession2taxid.gz;
 ```
 
 ## Running the main ngsLCA program
-The first module takes into account a chosen similarity interval between each read and its reference in the generated bam/sam file. It has been tested downloading the nt, refseq as well as individual genomes and fasta sequences. The similarity can be set as either an edit distance [-editdist[min/max]] eg. number of mismatches between the read and each alignment to a reference genomes or as a similarity distance [-simscore[low/high]] eg. a percentage of mismatches between the read and each alignment to a reference genomes.
+The first module takes into account a chosen similarity interval between each read and its reference in the generated bam/sam file. It has been tested downloading the nt, refseq as well as individual genomes and fasta sequences. The similarity can be set as either an edit distance [-editdist[min/max]] eg. number of mismatches between the read and each alignment to a reference genomes or as a similarity distance [-simscore[low/high]] eg. a percentage of mismatches between the read and each alignment to a reference genome.
 
 Edit distance can be a number between 0-10, while the similarity score is a number between 0-1. 
 
@@ -153,7 +153,7 @@ task -- functions that will be performed, the "pre-process" and "filter" need to
 ###### NMDS -- perform the NMDS rarefaction analysis.
 
 metadata -- path to your metadata
-###### The supplied metadata should be in a tab (\t) separated format, and contain three columns. In which the first column contains a list of all lca file names, second column should contain the desired naming of the samples in the illustrations, and third column should be a numeric value that can order samples (age, depth or rank, interval are not allowed). An example "metadata.txt" can be found under the "R_script" folder.
+###### The supplied metadata should be in a tab (\t) separated format, and contain three columns. In which the first column contains a list of all lca file names, second column should contain the desired naming of the samples in the illustrations, and third column should be a numeric value that can order samples (age, depth or rank, interval is not allowed). An example "metadata.txt" can be found under the "R_script" folder.
 
 threshold.1 -- minimum reads number required for confirming a taxon in each sample
 
