@@ -291,12 +291,13 @@ ReadIn = function(FileList,path){
   }
   
   #Removes taxa in the taxa.re list
-  if (!is.na(remove.taxa)) {
+  if (all(!is.na(remove.taxa))) {
     TAXAID = as.numeric(sapply(strsplit(X1$taxa, split = ":"),function(x) x[1]))
     if (length(which(TAXAID %in% remove.taxa)) >0 ) {
       X1 = X1[-which(TAXAID %in% remove.taxa),]
     }
   }
+  
   return(X1)
 }
 
@@ -1369,3 +1370,4 @@ if ("stratplot"%in%func) {
 #End
 ######################################
 ######################################
+
