@@ -172,8 +172,22 @@ if (!is.na(task)) {
 }
 
 if (!is.na(remove.taxa)) {
-  remove.taxa = as.numeric(strsplit(remove.taxa,",")[[1]])
+  remove.taxa1 = as.numeric(strsplit(remove.taxa,",")[[1]])
+  
+  if (any(is.na(remove.taxa1))) {
+    remove.taxa1 = read.csv(remove.taxa,stringsAsFactors = F,header = F)
+    remove.taxa1 = as.numeric(remove.taxa1[,1])
+  }
+  
+  if (is.numeric(remove.taxa1)) {
+    remove.taxa = remove.taxa1
+  }else{
+    cat("\n\n\t-> The 'remove.taxa' contains no-numeric values, please only input taxID to it.\n\n")
+    q("no")
+  }
+  
 }
+
 
 if (!is.na(remove.sample)) {
   remove.sample = strsplit(remove.sample,",")[[1]]
