@@ -168,12 +168,16 @@ threshold.2_blank -- same as threshold.2, but for filtering the blank controls; 
 threshold.3_blank -- same as threshold.3, but for filtering the blank controls; will using the value of threshold.3 if not specified
  
 remove.taxa -- a list of NCBI taxaID indicating the taxa that will be removed from final results
+###### This can be a comma separated string, e.g. remove.taxa="9606, 9605, 207598, 9604", or the path to a text file list each taxID in a line.
 
 remove.sample -- a list of file names indicating the samples that will be removed from the final results
+###### Example: remove.sample="sample1.lca, sample2.lca"
 
 group.name -- higher taxonomic units that will be used for grouping the taxa, need to be as the scientific names in NCBI taxonomy
+###### See example by run the script without any input 
 
 rank.name -- taxonomic ranks that will be used for clustering the taxa
+###### See example by run the script without any input 
 
 threshold.perGroup -- minimum reads percentage (to the total reads number of each group) required for confirming a taxon in each sample, ranging from 0 to 1
 
