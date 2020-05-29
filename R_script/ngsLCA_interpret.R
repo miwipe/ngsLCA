@@ -178,17 +178,17 @@ if (!is.na(remove.taxa)) {
     if (file.exists(remove.taxa)){
       remove.taxa1 = read.csv(remove.taxa,stringsAsFactors = F,header = F)
       remove.taxa1 = as.numeric(remove.taxa1[,1])
-      }else{
+    }else{
       cat("\n\n\t-> The 'remove.taxa' contains no-numeric values, or the appointed text file not exsiting.\n\n")
       q("no")
-      }
+    }
   }
   
-  if (is.numeric(remove.taxa1)) {
-    remove.taxa = remove.taxa1
-  }else{
+  if (any(is.na(remove.taxa1))) {
     cat("\n\n\t-> The 'remove.taxa' contains no-numeric values, please only input taxID to it.\n\n")
     q("no")
+  }else{
+    remove.taxa = remove.taxa1
   }
   
 }
