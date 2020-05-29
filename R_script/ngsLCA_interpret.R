@@ -175,8 +175,13 @@ if (!is.na(remove.taxa)) {
   remove.taxa1 = as.numeric(strsplit(remove.taxa,",")[[1]])
   
   if (any(is.na(remove.taxa1))) {
-    remove.taxa1 = read.csv(remove.taxa,stringsAsFactors = F,header = F)
-    remove.taxa1 = as.numeric(remove.taxa1[,1])
+    if (file.exists(remove.taxa)){
+      remove.taxa1 = read.csv(remove.taxa,stringsAsFactors = F,header = F)
+      remove.taxa1 = as.numeric(remove.taxa1[,1])
+      }else{
+      cat("\n\n\t-> The 'remove.taxa' contains no-numeric values, or the appointed text file not exsiting.\n\n")
+      q("no")
+      }
   }
   
   if (is.numeric(remove.taxa1)) {
@@ -304,11 +309,11 @@ ReadIn = function(FileList,path){
     
   }
   
-  #Removes taxa in the taxa.re list
+  #Removes taxa in the taxa.re list                           
   if (all(!is.na(remove.taxa))) {
     TAXAID = as.numeric(sapply(strsplit(X1$taxa, split = ":"),function(x) x[1]))
     if (length(which(TAXAID %in% remove.taxa)) >0 ) {
-      X1 = X1[-which(TAXAID %in% remove.taxa),]
+      X1 = X1[which(!TAXAID %in% remove.taxa),]
     }
   }
   
