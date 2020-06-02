@@ -50,9 +50,9 @@ if(length(c(needPacks,needPacks2))>0){
 }
 
 
-cat("\n\n\t-> loading R packages \n\n")
+cat("\n\n\t-> Load R packages \n\n")
 tmp<-lapply(c(packs,biocondpacks), require, character.only = TRUE, quietly = T)
-
+cat("\n\n\t-> Packages loaded \n\n")
 
 ###############################
 #0
@@ -70,7 +70,7 @@ getArgs<-function(x,l){
 
 Args<-function(l,args){
   if(! all(sapply(strsplit(l,"="),function(x)x[1])%in%names(args))){
-    cat("Error -> ",l[!sapply(strsplit(l,"="),function(x)x[1])%in%names(args)]," is not a valid argument\n")
+    cat("\n\n\tError -> ",l[!sapply(strsplit(l,"="),function(x)x[1])%in%names(args)]," is not a valid argument\n")
     q("no")
   }
   arguments<-list()
@@ -78,7 +78,7 @@ Args<-function(l,args){
     arguments[[a]]<-getArgs(a,l)
   
   if(any(!names(args)%in%names(arguments)&sapply(args,is.null))){
-    cat("Error -> ",names(args)[!names(args)%in%names(arguments)&sapply(args,is.null)]," is not optional!\n")
+    cat("\n\n\tError -> ",names(args)[!names(args)%in%names(arguments)&sapply(args,is.null)]," is not optional!\n")
     q("no")
   }
   for(a in names(args))
@@ -93,10 +93,10 @@ print.args<-function(args,des){
     des<-as.list(rep("",length(args)))
     names(des)<-names(args)
   }
-  cat("->  See https://github.com/miwipe/ngsLCA for wiki\n")
-  cat("->  Needed arguments:\n")
+  cat("\n->  See https://github.com/miwipe/ngsLCA for wiki\n")
+  cat("\n->  Needed arguments:\n")
   mapply(function(x)cat("\t",x,":",des[[x]],"\n"),cbind(names(args)[sapply(args,is.null)]))
-  cat("->  Optional arguments (defaults):\n")
+  cat("\n->  Optional arguments (defaults):\n")
   mapply(function(x)cat("\t",x," (",args[[x]],")",":",des[[x]],"\n"),cbind(names(args)[!sapply(args,is.null)]))
   q("no")
 }
@@ -175,20 +175,15 @@ if (!is.na(remove.taxa)) {
   remove.taxa1 = as.numeric(strsplit(remove.taxa,",")[[1]])
   
   if (any(is.na(remove.taxa1))) {
-    if (file.exists(remove.taxa)){
-      remove.taxa1 = read.csv(remove.taxa,stringsAsFactors = F,header = F)
-      remove.taxa1 = as.numeric(remove.taxa1[,1])
-    }else{
-      cat("\n\n\t-> The 'remove.taxa' contains no-numeric values, or the appointed text file not exsiting.\n\n")
-      q("no")
-    }
+    remove.taxa1 = read.csv(remove.taxa,stringsAsFactors = F,header = F)
+    remove.taxa1 = as.numeric(remove.taxa1[,1])
   }
   
-  if (any(is.na(remove.taxa1))) {
-    cat("\n\n\t-> The 'remove.taxa' contains no-numeric values, please only input taxID to it.\n\n")
-    q("no")
-  }else{
+  if (is.numeric(remove.taxa1)) {
     remove.taxa = remove.taxa1
+  }else{
+    cat("\n\n\tError -> The 'remove.taxa' contains no-numeric values, please only input taxID to it.\n\n")
+    q("no")
   }
   
 }
@@ -231,7 +226,7 @@ thr2b=as.numeric(threshold.2_blank)
 thr3b=as.numeric(threshold.3_blank)
 
 
-cat("\t-> arguments will be applied:\n")
+cat("\t-> Arguments will be applied:\n")
 cat("\t\tpath = ", path,"\n")
 cat("\t\tpath_blank = ", path_blank,"\n")
 cat("\t\toutput = ", output,"\n")
@@ -309,11 +304,11 @@ ReadIn = function(FileList,path){
     
   }
   
-  #Removes taxa in the taxa.re list                           
+  #Removes taxa in the taxa.re list
   if (all(!is.na(remove.taxa))) {
     TAXAID = as.numeric(sapply(strsplit(X1$taxa, split = ":"),function(x) x[1]))
     if (length(which(TAXAID %in% remove.taxa)) >0 ) {
-      X1 = X1[which(!TAXAID %in% remove.taxa),]
+      X1 = X1[-which(TAXAID %in% remove.taxa),]
     }
   }
   
@@ -399,7 +394,7 @@ if ("pre-process" %in% func) {
 ######################################
 if ("filter" %in% func) {
   
-  cat("\n\n\t-> filter the taxonomic profile\n\n")
+  cat("\n\n\t-> Filter the taxonomic profile\n\n")
   
   if (length(dir(paste(path, output, "/intermediate/", sep=""),pattern =  "taxa_profile_v1.txt")) == 0) {
     cat("\n\n\t-> Required file not found in the appointed directory, please run the 'pre-process' first \n\n")
@@ -513,7 +508,7 @@ if ("filter" %in% func) {
 ######################################
 if ("de-contamination" %in% func) {
   
-  cat("\n\n\t-> remove taxa detected in the contamination list\n\n")
+  cat("\n\n\t-> Remove taxa detected in the contamination list\n\n")
   
   if (length(dir(paste(path, output, "/intermediate/", sep=""),pattern="taxa_profile_v2.3.txt")) == 0) {
     cat("\n\n\t-> Required file not found in the appointed directory, please run the 'pre-process' and 'filter' first \n\n")
@@ -524,7 +519,7 @@ if ("de-contamination" %in% func) {
                    stringsAsFactors=FALSE,header = T,check.names = F)
 
   if (length(dir(paste(path, output, "/intermediate/", sep=""),pattern="contamination_list_v2.3.txt")) == 0) {
-    cat("\n\n\t-> No contamination list found in the appointed directory, de-contamination function denied.\n\tMake sure the right path to blank controls supplied, and the 'pre-process' and 'filter' functions performed \n\n")
+    cat("\n\n\t-> No contamination list found in the appointed directory, de-contamination function denied.\n\t-> Make sure the right path to blank controls supplied, and the 'pre-process' and 'filter' functions performed \n\n")
     DF2 = DF1
   }else{
     CON = read.delim(paste(path, output, "/intermediate/", "contamination_list_v2.3.txt", sep=""), 
@@ -614,7 +609,7 @@ GroupTaxa = function(DF, TaxaUnit){
 #group
 if ("group"%in%func) {
   
-  cat("\n\n\t-> group taxa\n\n")
+  cat("\n\n\t-> Group taxa\n\n")
   
   dir.create(paste(path,output, "/taxonomic_profiles/taxa_groups", sep=""))
   dir.create(paste(path,output, "/intermediate/taxa_groups", sep=""))
@@ -669,7 +664,7 @@ Taxa.cluster = function(DF, OutName){
 if ("rank"%in%func) {
   
   dir.create(paste(path, output, "/taxonomic_profiles/taxa_ranks", sep=""))
-  cat("\n\n\t-> cluster taxa into taxonomic ranks\n\n")
+  cat("\n\n\t-> Cluster taxa into taxonomic ranks\n\n")
   
   DF = read.csv(paste(path, output, "/intermediate/", "taxa_profile_v3.txt", sep=""),sep="\t", 
                 quote="", check.names=F,stringsAsFactors=F)
@@ -720,7 +715,7 @@ if ("rank"%in%func) {
 ######################################
 if ("count"%in%func) {
   
-  cat("\n\n\t-> counting reads and taxa numbers\n\n")
+  cat("\n\n\t-> Count reads and taxa numbers\n\n")
   dir.create(paste(path, output, "/counts", sep=""))
   dir.create(paste(path, output, "/counts/readsNO", sep=""))
   dir.create(paste(path, output, "/counts/taxaNO", sep=""))
@@ -851,7 +846,7 @@ if ("count"%in%func) {
 ######################################
 if ("megan"%in%func) {
   
-  cat("\n\n\t-> generate MEGAN files\n\n")
+  cat("\n\n\t-> Generate MEGAN files\n\n")
   dir.create(paste(path, output, "/megan", sep=""))
   
   X1 = read.csv(paste(path, output, "/taxonomic_profiles/complete_profile.txt", sep=""), 
@@ -895,7 +890,7 @@ if ("megan"%in%func) {
 ######################################
 if ("krona"%in%func) {
   
-  cat("\n\n\t-> generate krona files\n\n")
+  cat("\n\n\t-> Generate krona files\n\n")
   dir.create(paste(path, output, "/krona", sep=""))
   
   tax.branch = read.csv(paste(path, output, "/intermediate/", "taxa_branch.txt", sep=""), 
@@ -1016,7 +1011,7 @@ dataPrep = function(DF){
 
 if ("heatmap"%in%func){
   
-  cat("\n\n\t-> generate heatmap\n\n")
+  cat("\n\n\t-> Generate heatmap\n\n")
   dir.create(paste(path, output, "/heatmap", sep=""))
   
   X1 = read.csv(paste(path, output, "/taxonomic_profiles/complete_profile.txt", sep=""),
@@ -1028,7 +1023,7 @@ if ("heatmap"%in%func){
     print({HeatMap(X2)})
     dev.off() 
   }else{
-    cat("\n\n\t-> only one sample detected, heatmap function turn off\n\n")
+    cat("\n\n\t-> Only one sample detected, heatmap function turn off\n\n")
   }
   
   if (length(dir(paste(path, output, "/taxonomic_profiles/taxa_ranks",sep=""), pattern = ".txt"))>0){
@@ -1062,7 +1057,7 @@ if ("heatmap"%in%func){
 ######################################
 if ("barplot"%in%func){
   
-  cat("\n\n\t-> generating barplot \n\n")
+  cat("\n\n\t-> Generate barplot \n\n")
   dir.create(paste(path, output, "/barplot", sep=""))
   
   X1 = read.csv(paste(path, output, "/taxonomic_profiles/complete_profile.txt", sep=""),
@@ -1074,6 +1069,16 @@ if ("barplot"%in%func){
       X2[,i] = X2[,i]/sum(X2[,i])
     }
   }
+  
+  X2$sum = rowSums(X2)
+  X2 = X2[order(-X2$sum),]
+  
+  if (dim(X2)[1] > top.abundance) {
+    X2 = X2[1:top.abundance,-dim(X2)[2]]
+  } else{
+    X2 = X2[,-dim(X2)[2]]
+  }
+  
   sample_list = colnames(X2)
   X2$taxa = rownames(X2)
   X2 = melt(X2,"taxa")
@@ -1090,6 +1095,7 @@ if ("barplot"%in%func){
           axis.text.x = element_text(size = 15, angle = 15, colour = "black"),
           axis.text.y = element_text(size = 15, colour = "black"),
           panel.grid.major = element_blank(),
+          axis.ticks.length=unit(.25, "cm"),
           panel.background = element_blank(),
           panel.border = element_rect(colour = "black",fill = "transparent",size=1.5),
           legend.position="bottom")
@@ -1114,6 +1120,16 @@ if ("barplot"%in%func){
           X2[,j] = X2[,j]/sum(X2[,j])
         }
       }
+      
+      X2$sum = rowSums(X2)
+      X2 = X2[order(-X2$sum),]
+      
+      if (dim(X2)[1] > top.abundance) {
+        X2 = X2[1:top.abundance,-dim(X2)[2]]
+      } else{
+        X2 = X2[,-dim(X2)[2]]
+      }
+      
       sample_list = colnames(X2)
       X2$taxa = rownames(X2)
       X2 = melt(X2,"taxa")
@@ -1132,6 +1148,7 @@ if ("barplot"%in%func){
               axis.text.x = element_text(size = 15, angle = 15, colour = "black"),
               axis.text.y = element_text(size = 15, colour = "black"),
               panel.grid.major = element_blank(),
+              axis.ticks.length=unit(.25, "cm"),
               panel.background = element_blank(),
               panel.border = element_rect(colour = "black",fill = "transparent",size=1.5),
               legend.position="bottom")
@@ -1164,7 +1181,7 @@ Raref = function(DF, OutName){
     dev.off()
     #
     pdf(paste(path, output, "/rarefaction/", OutName, "_rarefy_rarecurve.pdf", sep=""), width=12, height=8) 
-    rarecurve(DF1, step = 20, sample = raremax, col = "blue", cex = 1.0)
+    rarecurve(DF1, step = 20, sample = raremax, col = "blue", cex = 1.0, ylab = "Observed taxa")
     dev.off()
   } else {
     cat("\n\n\t-> for", OutName, ":::Number of samples or taxa is less than 2, insufficient for rarefaction \n\n")
@@ -1173,7 +1190,7 @@ Raref = function(DF, OutName){
 #rarefy
 if ("rarefy"%in%func){
   
-  cat("\n\n\t-> random rarefaction \n\n")
+  cat("\n\n\t-> Perform random rarefaction \n\n")
   dir.create(paste(path, output, "/rarefaction", sep=""))
   
   X1 = read.csv(paste(path, output, "/taxonomic_profiles/complete_profile.txt", sep=""),
@@ -1249,7 +1266,7 @@ NMDSc = function(DF, OutName){
 
 if ("NMDS"%in%func) {
   
-  cat("\n\n\t-> NMDS, will take some time depending on input file size and the NMDS_trymax\n\n")
+  cat("\n\n\t-> Perform NMDS, will take some time depending on input file size and the NMDS_trymax\n\n")
   dir.create(paste(path, output, "/NMDS", sep=""))
   
   # NMDS on taxa profiles for all samples
@@ -1283,7 +1300,7 @@ if ("NMDS"%in%func) {
 ######################################
 if ("stratplot"%in%func) {
   
-  cat("\n\n\t-> generate stratplot\n\n")
+  cat("\n\n\t-> Generate stratplot\n\n")
   dir.create(paste(path, output, "/stratplot", sep=""))
   
   X1 = read.csv(paste(path, output, "/taxonomic_profiles/complete_profile.txt", sep=""),
