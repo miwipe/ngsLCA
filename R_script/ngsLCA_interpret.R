@@ -12,7 +12,7 @@
 ###############################
 #install and request R packages
 ###############################
-packs <- c("vegan","gplots","circlize","reshape","RColorBrewer","rioja","readr","BiocManager","devtools","tidyr","ggplot2")
+packs <- c("vegan","ggplot2","circlize","reshape","RColorBrewer","rioja","readr","BiocManager","devtools","tidyr","ggplot2","ggthemes")
 biocondpacks <- c("ComplexHeatmap")
 libs <- .libPaths()
 installedPacks <- rownames(installed.packages(lib.loc=libs))
@@ -256,7 +256,7 @@ cat("\t\tNMDS_trymax = ", NMDS_trymax,"\n")
 ReadIn = function(FileList,path){
   #creat a black dataframe
   X1 = data.frame(taxa=character(), stringsAsFactors=F)
-
+  
   #read in
   for (i in 1:length(FileList)) {
     X2.1 =  read.csv(paste(path, FileList[i], sep=""), header=F, sep="\t", stringsAsFactors=F, fill=T, 
@@ -517,7 +517,7 @@ if ("de-contamination" %in% func) {
   
   DF1 = read.delim(paste(path, output, "/intermediate/", "taxa_profile_v2.3.txt", sep=""), 
                    stringsAsFactors=FALSE,header = T,check.names = F)
-
+  
   if (length(dir(paste(path, output, "/intermediate/", sep=""),pattern="contamination_list_v2.3.txt")) == 0) {
     cat("\n\n\t-> No contamination list found in the appointed directory, de-contamination function denied.\n\t-> Make sure the right path to blank controls supplied, and the 'pre-process' and 'filter' functions performed \n\n")
     DF2 = DF1
@@ -723,11 +723,11 @@ if ("count"%in%func) {
   DF1 = read.delim(paste(path, output, "/intermediate/", "taxa_profile_v1.txt", sep=""), 
                    stringsAsFactors=FALSE,header = T,check.names = F)
   DF2.1 = read.delim(paste(path, output, "/intermediate/", "taxa_profile_v2.1.txt", sep=""), 
-                   stringsAsFactors=FALSE,header = T,check.names = F)
+                     stringsAsFactors=FALSE,header = T,check.names = F)
   DF2.2 = read.delim(paste(path, output, "/intermediate/", "taxa_profile_v2.2.txt", sep=""), 
-                   stringsAsFactors=FALSE,header = T,check.names = F)
+                     stringsAsFactors=FALSE,header = T,check.names = F)
   DF2.3 = read.delim(paste(path, output, "/intermediate/", "taxa_profile_v2.3.txt", sep=""), 
-                   stringsAsFactors=FALSE,header = T,check.names = F)
+                     stringsAsFactors=FALSE,header = T,check.names = F)
   DF3 = read.delim(paste(path, output, "/intermediate/", "taxa_profile_v3.txt", sep=""), 
                    stringsAsFactors=FALSE,header = T,check.names = F)
   
@@ -986,7 +986,7 @@ HeatMap = function(DF){
                  heatmap_legend_param = list(title = "abundance", title_gp = gpar(fontsize = 8), labels_gp = gpar(fontsize = 8), 
                                              legend_height = unit(10, "cm"), color_bar = "continous"))
   }
-
+  
   return(F1)
 }
 
@@ -1000,7 +1000,7 @@ dataPrep = function(DF){
       DF[N,2] = paste(DF[N,1],DF[N,2],sep="_")
     }
   }
-
+  
   row.names(DF) = DF[,2]
   DF2 = as.data.frame(DF[,-c(1:3)])
   colnames(DF2) = colnames(DF)[-c(1:3)]
@@ -1104,7 +1104,7 @@ if ("barplot"%in%func){
          filename=paste(path, output, "/barplot/all_taxa_barplot.pdf", sep=""), 
          useDingbats=FALSE)
   
-
+  
   if (length(dir(paste(path, output, "/taxonomic_profiles/taxa_ranks",sep=""), pattern = ".txt"))>0){
     
     file.list = dir(paste(path, output, "/taxonomic_profiles/taxa_ranks",sep=""), pattern = ".txt")
@@ -1134,7 +1134,7 @@ if ("barplot"%in%func){
       X2$taxa = rownames(X2)
       X2 = melt(X2,"taxa")
       X2$variable = factor(X2$variable,sample_list,ordered = T)
-
+      
       Name = sub(".txt", "", file.list[i])
       
       p1 = ggplot(X2, aes(x=variable, y=value,fill =taxa)) +
@@ -1152,7 +1152,7 @@ if ("barplot"%in%func){
               panel.background = element_blank(),
               panel.border = element_rect(colour = "black",fill = "transparent",size=1.5),
               legend.position="bottom")
-     
+      
       ggsave(plot=p1, height=10, width=15, dpi=500,
              filename=paste(path, output, "/barplot/", Name, "_barplot.pdf",sep=""), 
              useDingbats=FALSE)
@@ -1294,10 +1294,185 @@ if ("NMDS"%in%func) {
 }
 
 
+
 ######################################
 #12
 #stratplot
 ######################################
+# mutiplot function
+multiplot <- function(..., plotlist = NULL, file, cols = 1, layout = NULL) {
+  require(grid)
+  
+  plots <- c(list(...), plotlist)
+  
+  numPlots = length(plots)
+  
+  if (is.null(layout)) {
+    layout <- matrix(seq(1, cols * ceiling(numPlots/cols)),
+                     ncol = cols, nrow = ceiling(numPlots/cols))
+  }
+  
+  if (numPlots == 1) {
+    print(plots[[1]])
+    
+  } else {
+    grid.newpage()
+    pushViewport(viewport(layout = grid.layout(nrow(layout), ncol(layout))))
+    
+    for (i in 1:numPlots) {
+      matchidx <- as.data.frame(which(layout == i, arr.ind = TRUE))
+      
+      print(plots[[i]], vp = viewport(layout.pos.row = matchidx$row,
+                                      layout.pos.col = matchidx$col))
+    }
+  }
+}
+
+#stratplots function
+stratplots <- function(DF,plotname){
+  
+  plots =list()
+  
+  if (any(is.na(as.numeric(rownames(DF))))){
+    
+    for (i in 1:dim(DF)[2]) {
+      
+      Name = colnames(DF)[i]
+      d3 = data.frame(name=rownames(DF),
+                      taxa = DF[,i],
+                      stringsAsFactors = F)
+      d3$order = 1:dim(d3)[1]
+      
+      
+      if(i==1){
+        d5 <- ggplot(d3, aes(order, taxa)) +
+          geom_ribbon(aes(ymin = 0, ymax= taxa), fill='#4682b4', alpha=2) +
+          theme_tufte() + coord_flip() + ggtitle(Name) +
+          scale_x_continuous(breaks=d3$order,labels=d3$name) +
+          theme(axis.title.x=element_blank(),
+                axis.title.y=element_blank(),
+                axis.text.x = element_text(colour = "black"),
+                axis.text.y = element_text(colour = "black"),
+                axis.line.x = element_line(colour = "black",size=0.3),
+                axis.line.y = element_line(colour = "black",size=0.3))
+        
+        assign(paste("plot", i, sep=""), d5)
+        plots[[i]] = paste("plot", i, sep="")
+      }else{
+        d5 <- ggplot(d3, aes(order, taxa)) +
+          geom_ribbon(aes(ymin = 0, ymax= taxa), fill='#4682b4', alpha=2) +
+          theme_tufte() + coord_flip() + ggtitle(Name) +
+          scale_x_continuous(breaks=d3$order,labels=d3$name) +
+          theme(axis.title.y=element_blank(),
+                axis.ticks.y=element_blank(),
+                axis.title.x=element_blank(),
+                axis.text.y=element_blank(),
+                axis.text.x = element_text(colour = "black"),
+                axis.line.x = element_line(colour = "black",size=0.3))
+        
+        assign(paste("plot", i, sep=""), d5)
+        plots[[i]] = paste("plot", i, sep="")
+      }
+    }
+  }
+  
+  
+  if (all(!is.na(as.numeric(rownames(DF))))){
+    
+    for (i in 1:dim(DF)[2]) {
+      
+      Name = colnames(DF)[i]
+      d3 = data.frame(name=rownames(DF),
+                      taxa = DF[,i],
+                      stringsAsFactors = F)
+      
+      if(i==1){
+        
+        d5 <- ggplot(d3, aes(order, taxa)) +
+          geom_ribbon(aes(ymin = 0, ymax= taxa), fill='#4682b4', alpha=2) +
+          theme_tufte() + coord_flip() + ggtitle(Name) +
+          theme(axis.title.x=element_blank(),
+                axis.title.y=element_blank(),
+                axis.text.x = element_text(colour = "black"),
+                axis.text.y = element_text(colour = "black"),
+                axis.line.x = element_line(colour = "black",size=0.3),
+                axis.line.y = element_line(colour = "black",size=0.3))
+        
+        assign(paste("plot", i, sep=""), d5)
+        plots[[i]] = paste("plot", i, sep="")
+      }else{
+        d5 <- ggplot(d3, aes(order, taxa)) +
+          geom_ribbon(aes(ymin = 0, ymax= taxa), fill='#4682b4', alpha=2) +
+          theme_tufte() + coord_flip() + ggtitle(Name) +
+          theme(axis.title.y=element_blank(),
+                axis.ticks.y=element_blank(),
+                axis.title.x=element_blank(),
+                axis.text.y=element_blank(),
+                axis.text.x = element_text(colour = "black"),
+                axis.line.x = element_line(colour = "black",size=0.3))
+        
+        assign(paste("plot", i, sep=""), d5)
+        plots[[i]] = paste("plot", i, sep="")
+        
+      }
+    }
+  }
+  
+  
+  if (i==1) {
+    pdf(paste(path, output, "/stratplot/",plotname,".pdf", sep=""), width=(i*3), height=8)
+    multiplot(plot1,cols=1)
+    dev.off()
+  }
+  if (i==2) {
+    pdf(paste(path, output, "/stratplot/",plotname,".pdf", sep=""), width=(i*3), height=8)
+    com_plots = multiplot(plot1,plot2,cols=2)
+    dev.off()
+  }
+  if (i==3) {
+    pdf(paste(path, output, "/stratplot/",plotname,".pdf", sep=""), width=(i*3), height=8)
+    com_plots = multiplot(plot1,plot2,plot3,cols=3)
+    dev.off()
+  }
+  if (i==4) {
+    pdf(paste(path, output, "/stratplot/",plotname,".pdf", sep=""), width=(i*3), height=8)
+    com_plots = multiplot(plot1,plot2,plot3,plot4,cols=4)
+    dev.off()
+  }
+  if (i==5) {
+    pdf(paste(path, output, "/stratplot/",plotname,".pdf", sep=""), width=(i*3), height=8)
+    com_plots = multiplot(plot1,plot2,plot3,plot4,plot5,cols=5)
+    dev.off()
+  }
+  if (i==6) {
+    pdf(paste(path, output, "/stratplot/",plotname,".pdf", sep=""), width=(i*3), height=8)
+    com_plots = multiplot(plot1,plot2,plot3,plot4,plot5,plot6,cols=6)
+    dev.off()
+  }
+  if (i==7) {
+    pdf(paste(path, output, "/stratplot/",plotname,".pdf", sep=""), width=(i*3), height=8)
+    com_plots = multiplot(plot1,plot2,plot3,plot4,plot5,plot6,plot7,cols=7)
+    dev.off()
+  }
+  if (i==8) {
+    pdf(paste(path, output, "/stratplot/",plotname,".pdf", sep=""), width=(i*3), height=8)
+    com_plots = multiplot(plot1,plot2,plot3,plot4,plot5,plot6,plot7,plot8,cols=8)
+    dev.off()
+  }
+  if (i==9) {
+    pdf(paste(path, output, "/stratplot/",plotname,".pdf", sep=""), width=(i*3), height=8)
+    com_plots = multiplot(plot1,plot2,plot3,plot4,plot5,plot6,plot7,plot8,plot9,cols=9)
+    dev.off()
+  }
+  if (i==10) {
+    pdf(paste(path, output, "/stratplot/",plotname,".pdf", sep=""), width=(i*3), height=8)
+    com_plots = multiplot(plot1,plot2,plot3,plot4,plot5,plot6,plot7,plot8,plot9,plot10,cols=10)
+    dev.off()
+  }
+}
+
+
+#generating stratplot
 if ("stratplot"%in%func) {
   
   cat("\n\n\t-> Generate stratplot\n\n")
@@ -1316,41 +1491,46 @@ if ("stratplot"%in%func) {
   if (dim(X2)[1]>top.abundance) {
     X2 = X2[order(rowSums(X2),decreasing = T)[1:top.abundance],]
   }
-  
-  if (dim(X2)[1]>30) {
-    cat("\n\n\t-> top.abundance is too high for valid stratplots; will only illustrate the top 30 taxa\n\n")
-    X2 = X2[order(rowSums(X2),decreasing = T)[1:30],]
-  }
-
   X2 = as.data.frame(t(X2),stringsAsFactors = F)
   
-  widthF=10
-  if (dim(X2)[2]>10) {
-    widthF=20
-  }
-  if(dim(X2)[2]>20) {
-    widthF=30
+  if (dim(X2)[2] < 11) {
+    x3 = X2
+    stratplots(x3,"all_taxa")
   }
   
-  yname=as.numeric(rownames(X2))
   
-  if (any(is.na(yname))) {
-    pdf(paste(path, output, "/stratplot/all_taxa_stratplot.pdf", sep=""), width=widthF, height=8)
-    strat.plot(X2, plot.bar = T, plot.line = T, plot.poly = F, y.rev=T, col.poly.line='dark green', 
-               col.poly='dark green', col.bar = 'dark green', title="All taxa", ylabel="Order",
-               srt.xlabel = 45, xSpace = 0.003, lwd.bar = 3)
-    dev.off()
-  }else{
-    pdf(paste(path, output, "/stratplot/all_taxa_stratplot.pdf", sep=""), width=widthF, height=8)
-    strat.plot(X2, plot.bar = T, plot.line = T, plot.poly = F, y.rev=T, col.poly.line='dark green', 
-               col.poly='dark green', col.bar = 'dark green', title="All taxa", yvar=yname,
-               srt.xlabel = 45, xSpace = 0.003, lwd.bar = 3)
-    dev.off()
+  if (dim(X2)[2] > 10) {
+    
+    M=as.integer(dim(X2)[2]/10)
+    
+    if (dim(X2)[2]/10 == M) {
+      
+      for (n in 1:M) {
+        x3 = X2[,(10*n-9):(10*n)]
+        stratplots(x3,paste("all_taxa_",n,sep = ""))
+      }
+    }
+    
+    if (dim(X2)[2]/10 != M) {
+      
+      for (n in 1:M) {
+        x3 = X2[,(10*n-9):(10*n)]
+        stratplots(x3,paste("all_taxa_",n,sep = ""))
+      }
+      
+      x3 = as.data.frame(X2[,(M*10+1):dim(X2)[2]])
+      rownames(x3) = rownames(X2)
+      colnames(x3) = colnames(X2)[(M*10+1):dim(X2)[2]]
+      stratplots(x3,paste("all_taxa_",n+1,sep = ""))
+      
+    }
   }
+  
   
   if (length(dir(paste(path, output, "/taxonomic_profiles/taxa_ranks",sep=""), pattern = ".txt"))>0){
     
     file.list = dir(paste(path, output, "/taxonomic_profiles/taxa_ranks",sep=""), pattern = ".txt")
+    NAMES = sub(".txt","",file.list)
     
     for (i in 1:length(file.list)) {
       
@@ -1358,46 +1538,47 @@ if ("stratplot"%in%func) {
                     sep="\t", quote="",check.names=F,stringsAsFactors=F)
       X2 = dataPrep(X1)
       
-      for (j in 1:dim(X2)[2]){
-        if (sum(X2[,j])>0) {
-          X2[,j] = X2[,j]/sum(X2[,j])
+      for (m in 1:dim(X2)[2]){
+        if (sum(X2[,m])>0) {
+          X2[,m] = X2[,m]/sum(X2[,m])
         }
       }
       
       if (dim(X2)[1]>top.abundance) {
         X2 = X2[order(rowSums(X2),decreasing = T)[1:top.abundance],]
       }
-      
-      if (dim(X2)[1]>30) {
-        X2 = X2[order(rowSums(X2),decreasing = T)[1:30],]
-      }
-
       X2 = as.data.frame(t(X2),stringsAsFactors = F)
       
-      widthF=10
-      if (dim(X2)[2]>10) {
-        widthF=20
-      }
-      if(dim(X2)[2]>20) {
-        widthF=30
+      if (dim(X2)[2] < 11) {
+        x3 = X2
+        stratplots(x3,file.list[i])
       }
       
-      Name = sub(".txt", "", file.list[i])
-      
-      yname=as.numeric(rownames(X2))
-      
-      if (any(is.na(yname))) {
-        pdf(paste(path, output, "/stratplot/",Name,"_stratplot.pdf", sep=""), width=widthF, height=8)
-        strat.plot(X2, plot.bar = T, plot.line = T, plot.poly = F, y.rev=T, col.poly.line='dark green', 
-                   col.poly='dark green', col.bar = 'dark green', title=Name, ylabel="Order",
-                   srt.xlabel = 45, xSpace = 0.003, lwd.bar = 3)
-        dev.off()
-      }else{
-        pdf(paste(path, output, "/stratplot/",Name,"_stratplot.pdf", sep=""), width=widthF, height=8)
-        strat.plot(X2, plot.bar = T, plot.line = T, plot.poly = F, y.rev=T, col.poly.line='dark green', 
-                   col.poly='dark green', col.bar = 'dark green', title=Name, yvar=yname,
-                   srt.xlabel = 45, xSpace = 0.003, lwd.bar = 3)
-        dev.off()
+      if (dim(X2)[2] > 10) {
+        
+        M=as.integer(dim(X2)[2]/10)
+        
+        if (dim(X2)[2]/10 == M) {
+          
+          for (n in 1:M) {
+            x3 = X2[,(10*n-9):(10*n)]
+            stratplots(x3,paste(NAMES[i],"_",n,sep = ""))
+          }
+        }
+        
+        if (dim(X2)[2]/10 != M) {
+          
+          for (n in 1:M) {
+            x3 = X2[,(10*n-9):(10*n)]
+            stratplots(x3,paste(NAMES[i],"_",n,sep = ""))
+          }
+          
+          x3 = as.data.frame(X2[,(M*10+1):dim(X2)[2]])
+          rownames(x3) = rownames(X2)
+          colnames(x3) = colnames(X2)[(M*10+1):dim(X2)[2]]
+          stratplots(x3,paste(NAMES[i],"_",n+1,sep = ""))
+          
+        }
       }
     }
   }
@@ -1406,4 +1587,3 @@ if ("stratplot"%in%func) {
 #End
 ######################################
 ######################################
-
