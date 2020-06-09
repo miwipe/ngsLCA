@@ -1353,8 +1353,9 @@ stratplots <- function(DF,plotname){
                 axis.title.y=element_blank(),
                 axis.text.x = element_text(colour = "black"),
                 axis.text.y = element_text(colour = "black"),
-                axis.line.x = element_line(colour = "black",size=0.3),
-                axis.line.y = element_line(colour = "black",size=0.3))
+                axis.line.x = element_line(colour = "black",size=0.25),
+                axis.line.y = element_line(colour = "black",size=0.25),
+                axis.ticks.length=unit(.25, "cm"))
         
         assign(paste("plot", i, sep=""), d5)
         plots[[i]] = paste("plot", i, sep="")
@@ -1368,7 +1369,8 @@ stratplots <- function(DF,plotname){
                 axis.title.x=element_blank(),
                 axis.text.y=element_blank(),
                 axis.text.x = element_text(colour = "black"),
-                axis.line.x = element_line(colour = "black",size=0.3))
+                axis.line.x = element_line(colour = "black",size=0.25),
+                axis.ticks.length=unit(.25, "cm"))
         
         assign(paste("plot", i, sep=""), d5)
         plots[[i]] = paste("plot", i, sep="")
@@ -1395,8 +1397,9 @@ stratplots <- function(DF,plotname){
                 axis.title.y=element_blank(),
                 axis.text.x = element_text(colour = "black"),
                 axis.text.y = element_text(colour = "black"),
-                axis.line.x = element_line(colour = "black",size=0.3),
-                axis.line.y = element_line(colour = "black",size=0.3))
+                axis.line.x = element_line(colour = "black",size=0.25),
+                axis.line.y = element_line(colour = "black",size=0.25),
+                axis.ticks.length=unit(.25, "cm"))
         
         assign(paste("plot", i, sep=""), d5)
         plots[[i]] = paste("plot", i, sep="")
@@ -1409,7 +1412,8 @@ stratplots <- function(DF,plotname){
                 axis.title.x=element_blank(),
                 axis.text.y=element_blank(),
                 axis.text.x = element_text(colour = "black"),
-                axis.line.x = element_line(colour = "black",size=0.3))
+                axis.line.x = element_line(colour = "black",size=0.25),
+                axis.ticks.length=unit(.25, "cm"))
         
         assign(paste("plot", i, sep=""), d5)
         plots[[i]] = paste("plot", i, sep="")
