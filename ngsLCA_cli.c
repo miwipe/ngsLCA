@@ -21,6 +21,7 @@ pars *pars_init(){
   p->minmapq=0;
   p->discard=516;//discard unmapped and read fail
   p->gz_sam = Z_NULL;
+  p->minlength=-1;
   return p;
 }
 
@@ -50,6 +51,7 @@ pars *get_pars(int argc,char **argv){
     else if(!strcasecmp("-editdistMin",key)) p->editdistMin=atoi(val);
     else if(!strcasecmp("-editdistMax",key)) p->editdistMax=atoi(val);
     else if(!strcasecmp("-minmapq",key)) p->minmapq=atoi(val);
+    else if(!strcasecmp("-minlength",key)) p->minlength=atoi(val);
     else if(!strcasecmp("-simscoreLow",key)) p->simscoreLow=atof(val);
     else if(!strcasecmp("-simscoreHigh",key)) p->simscoreHigh=atof(val);
     else if(!strcasecmp("-outnames",key)) p->outnames=strdup(val);

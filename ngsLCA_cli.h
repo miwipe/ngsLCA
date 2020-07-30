@@ -27,6 +27,7 @@ typedef struct{
   FILE *fp3;
   int minmapq;
   int discard; //or bitoperation with the flag of the read
+  int minlength;
 }pars;
 
 

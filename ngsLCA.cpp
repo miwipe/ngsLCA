@@ -320,7 +320,7 @@ std::vector<int> purge(std::vector<int> &taxids,std::vector<int> &editdist){
 }
 
 
-void hts(FILE *fp,samFile *fp_in,int2int &i2i,int2int& parent,bam_hdr_t *hdr,int2char &rank, int2char &name_map,FILE *log,int minmapq,int discard,int editMin, int editMax, double scoreLow,double scoreHigh){
+void hts(FILE *fp,samFile *fp_in,int2int &i2i,int2int& parent,bam_hdr_t *hdr,int2char &rank, int2char &name_map,FILE *log,int minmapq,int discard,int editMin, int editMax, double scoreLow,double scoreHigh,int minlength){
   fprintf(stderr,"\t-> editMin:%d editmMax:%d scoreLow:%f scoreHigh:%f\n",editMin,editMax,scoreLow,scoreHigh);
   assert(fp_in!=NULL);
   bam1_t *aln = bam_init1(); //initialize an alignment
@@ -352,6 +352,8 @@ void hts(FILE *fp,samFile *fp_in,int2int &i2i,int2int& parent,bam_hdr_t *hdr,int
       last=strdup(qname);
       seq=make_seq(aln);
     }
+    if(minlength!=-1&&(minlength<aln->core.l_qseq))
+      continue;
     //change of ref
     if(strcmp(last,qname)!=0) {
       if(taxids.size()>0&&skip==0){
@@ -479,7 +481,7 @@ void hts(FILE *fp,samFile *fp_in,int2int &i2i,int2int& parent,bam_hdr_t *hdr,int
   return ;//0;
 }
 
-void hts2(FILE *fp,gzFile fp_in,char2int &c2i,int2int& parent,bam_hdr_t *hdr,int2char &rank, int2char &name_map,FILE *log,int minmapq,int discard,int editMin, int editMax, double scoreLow,double scoreHigh){
+void hts2(FILE *fp,gzFile fp_in,char2int &c2i,int2int& parent,bam_hdr_t *hdr,int2char &rank, int2char &name_map,FILE *log,int minmapq,int discard,int editMin, int editMax, double scoreLow,double scoreHigh,int minlength){
   fprintf(stderr,"\t-> editMin:%d editmMax:%d scoreLow:%f scoreHigh:%f\n",editMin,editMax,scoreLow,scoreHigh);
   assert(fp_in!=NULL);
   int comp ;
@@ -507,6 +509,8 @@ void hts2(FILE *fp,gzFile fp_in,char2int &c2i,int2int& parent,bam_hdr_t *hdr,int
     strtok(NULL,"\t\n ");//tlen
     char *thisseq=strtok(NULL,"\t\n ");//tlen
     char *thisqual=strtok(NULL,"\t\n ");//tlen
+    if(minlength!=-1&&(minlength<strlen(thisseq)))
+      continue;
     //    char *tail=strtok(NULL,"\t\n ");//tlen
     //fprintf(stderr,"tail:%s\n",tail);
     //    fprintf(stderr,"%d %d\n",aln->core.qual,minmapq);
@@ -849,9 +853,9 @@ int main(int argc, char **argv){
   mod_db(mod_in,mod_out,parent,rank,name_map);
 
   if(p->gz_sam==NULL)
-    hts(p->fp1,p->hts,*i2i,parent,p->header,rank,name_map,p->fp3,p->minmapq,p->discard,p->editdistMin,p->editdistMax,p->simscoreLow,p->simscoreHigh);
+    hts(p->fp1,p->hts,*i2i,parent,p->header,rank,name_map,p->fp3,p->minmapq,p->discard,p->editdistMin,p->editdistMax,p->simscoreLow,p->simscoreHigh,p->minlength);
   else
-    hts2(p->fp1,p->gz_sam,*c2i,parent,p->header,rank,name_map,p->fp3,p->minmapq,p->discard,p->editdistMin,p->editdistMax,p->simscoreLow,p->simscoreHigh);
+    hts2(p->fp1,p->gz_sam,*c2i,parent,p->header,rank,name_map,p->fp3,p->minmapq,p->discard,p->editdistMin,p->editdistMax,p->simscoreLow,p->simscoreHigh,p->minlength);
   fprintf(stderr,"\t-> Number of species with reads that map uniquely: %lu\n",specWeight.size());
   
   for(int2int::iterator it=errmap.begin();it!=errmap.end();it++)
