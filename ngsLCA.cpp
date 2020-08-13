@@ -321,7 +321,7 @@ std::vector<int> purge(std::vector<int> &taxids,std::vector<int> &editdist){
 
 
 void hts(FILE *fp,samFile *fp_in,int2int &i2i,int2int& parent,bam_hdr_t *hdr,int2char &rank, int2char &name_map,FILE *log,int minmapq,int discard,int editMin, int editMax, double scoreLow,double scoreHigh,int minlength){
-  fprintf(stderr,"\t-> editMin:%d editmMax:%d scoreLow:%f scoreHigh:%f\n",editMin,editMax,scoreLow,scoreHigh);
+  fprintf(stderr,"\t-> editMin:%d editmMax:%d scoreLow:%f scoreHigh:%f minlength:%d\n",editMin,editMax,scoreLow,scoreHigh,minlength);
   assert(fp_in!=NULL);
   bam1_t *aln = bam_init1(); //initialize an alignment
   int comp ;
@@ -352,7 +352,7 @@ void hts(FILE *fp,samFile *fp_in,int2int &i2i,int2int& parent,bam_hdr_t *hdr,int
       last=strdup(qname);
       seq=make_seq(aln);
     }
-    if(minlength!=-1&&(minlength<aln->core.l_qseq))
+    if(minlength!=-1&&(aln->core.l_qseq<minlength))
       continue;
     //change of ref
     if(strcmp(last,qname)!=0) {
@@ -482,7 +482,7 @@ void hts(FILE *fp,samFile *fp_in,int2int &i2i,int2int& parent,bam_hdr_t *hdr,int
 }
 
 void hts2(FILE *fp,gzFile fp_in,char2int &c2i,int2int& parent,bam_hdr_t *hdr,int2char &rank, int2char &name_map,FILE *log,int minmapq,int discard,int editMin, int editMax, double scoreLow,double scoreHigh,int minlength){
-  fprintf(stderr,"\t-> editMin:%d editmMax:%d scoreLow:%f scoreHigh:%f\n",editMin,editMax,scoreLow,scoreHigh);
+  fprintf(stderr,"\t-> editMin:%d editmMax:%d scoreLow:%f scoreHigh:%f minlength:%d\n",editMin,editMax,scoreLow,scoreHigh,minlength);
   assert(fp_in!=NULL);
   int comp ;
 
@@ -509,7 +509,7 @@ void hts2(FILE *fp,gzFile fp_in,char2int &c2i,int2int& parent,bam_hdr_t *hdr,int
     strtok(NULL,"\t\n ");//tlen
     char *thisseq=strtok(NULL,"\t\n ");//tlen
     char *thisqual=strtok(NULL,"\t\n ");//tlen
-    if(minlength!=-1&&(minlength<strlen(thisseq)))
+    if(minlength!=-1&&(strlen(thisseq)<minlength))
       continue;
     //    char *tail=strtok(NULL,"\t\n ");//tlen
     //fprintf(stderr,"tail:%s\n",tail);
