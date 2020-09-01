@@ -13,12 +13,43 @@ int mod_out[]=  {1333996 , 1333996 ,1582270,1914213,1917265,1915309 ,263865,2801
 #include <htslib/sam.h>
 #include <vector>
 #include <pthread.h>
+#include <signal.h>//for catching ctrl+c, allow threads to finish
 #include <algorithm>
 #include <errno.h>
 #include <sys/stat.h>
 #include "ngsLCA.h"
 #include "ngsLCA_cli.h"
 #include "ngsLCA_format.h"
+
+int SIG_COND =1;//if we catch signal then quit program nicely
+int VERBOSE =1;
+int really_kill =3;
+
+void handler(int s) {
+
+  if(VERBOSE)
+    fprintf(stderr,"\n\t-> Caught SIGNAL: Will try to exit nicely (no more threads are created.\n\t\t\t  We will wait for the current threads to finish)\n");
+  
+  if(--really_kill!=3)
+  fprintf(stderr,"\n\t-> If you really want ./ngsLCA to exit uncleanly ctrl+c: %d more times\n",really_kill+1);
+  fflush(stderr);
+  if(!really_kill)
+    exit(0);
+  VERBOSE=0;
+  SIG_COND=0;
+ 
+}
+
+ //we are threading so we want make a nice signal handler for ctrl+c
+void catchkill(){
+  struct sigaction sa;
+  sigemptyset (&sa.sa_mask);
+  sa.sa_flags = 0;
+  sa.sa_handler = handler;
+  sigaction(SIGPIPE, &sa, 0);
+  sigaction(SIGINT, &sa, 0);  
+
+}
 
 int2int specWeight;// Number of reads that map uniquely to a species.
 int2int i2i_missing;//contains counter of missing hits for each taxid that doesnt exists in acc2taxid
@@ -321,7 +352,7 @@ std::vector<int> purge(std::vector<int> &taxids,std::vector<int> &editdist){
 
 
 void hts(FILE *fp,samFile *fp_in,int2int &i2i,int2int& parent,bam_hdr_t *hdr,int2char &rank, int2char &name_map,FILE *log,int minmapq,int discard,int editMin, int editMax, double scoreLow,double scoreHigh,int minlength){
-  fprintf(stderr,"\t-> editMin:%d editmMax:%d scoreLow:%f scoreHigh:%f minlength:%d\n",editMin,editMax,scoreLow,scoreHigh,minlength);
+  fprintf(stderr,"[%s] \t-> editMin:%d editmMax:%d scoreLow:%f scoreHigh:%f minlength:%d\n",__FUNCTION__,editMin,editMax,scoreLow,scoreHigh,minlength);
   assert(fp_in!=NULL);
   bam1_t *aln = bam_init1(); //initialize an alignment
   int comp ;
@@ -806,9 +837,10 @@ int2node makeNodes(int2int &parent){
 
 int main(int argc, char **argv){
   if(argc==1){
-    fprintf(stderr,"\t-> ngsLCA -names -nodes -acc2tax [-editdist[min/max] -simscore[low/high] -minmapq -discard] -bam \n");
+    fprintf(stderr,"\t-> ./ngsLCA -names -nodes -acc2tax [-editdist[min/max] -simscore[low/high] -minmapq -discard] -bam \n");
     return 0;
   }
+  catchkill();
 #if 0
   int2int ww = get_weight(argv[1]);
   return 0;
