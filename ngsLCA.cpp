@@ -93,6 +93,7 @@ void strip(char *line){
 
  
 int2int *bamRefId2tax(bam_hdr_t *hdr,char *acc2taxfile){
+  time_t t=time(NULL);
 fprintf(stderr,"\t-> Starting to extract (acc->taxid) from binary file: \'%s\'\n",acc2taxfile);
 const char *CONSTNAME = "delmeme.bin";
   //this contains refname(as int) -> taxid
@@ -121,7 +122,7 @@ if(!((at++ %100000 ) ))
   }
   
   
-  fprintf(stderr,"\t-> Number of entries to use from accesion to taxid: %lu\n",am->size());
+fprintf(stderr,"\t-> Number of entries to use from accesion to taxid: %lu, time taken: %.2f sec\n",am->size(),(float)(time(NULL) - t));
   return am;
 }
 
