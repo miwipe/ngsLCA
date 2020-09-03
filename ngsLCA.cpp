@@ -1,6 +1,4 @@
-int mod_in[] =  {1649555 , 1401172 ,1582271, 374764, 242716,1793725 ,292451,38298,  63403  ,67357  ,\
-		 163247  ,328623   ,356150 , 502130, 545877,996989  ,996990,1086724,1169024,1576640,\
-		 1769757,1802981,1811974 ,1955118};
+int mod_in[] =  {1649555 , 1401172 ,1582271, 374764, 242716,1793725 ,292451,38298,  63403  ,67357  , 163247  ,328623   ,356150 , 502130, 545877,996989  ,996990,1086724,1169024,1576640, 1769757,1802981,1811974 ,1955118};
 int mod_out[]=  {1333996 , 1333996 ,1582270,1914213,1917265,1915309 ,263865,2801 ,1916091,285450,1762941,1916091,157727,1932322,376133,1762939 ,1762946,430531, 1169025,1247960,1769758,1708715,1708715	,1925741};
 
 #include <cassert>
@@ -17,17 +15,17 @@ int mod_out[]=  {1333996 , 1333996 ,1582270,1914213,1917265,1915309 ,263865,2801
 #include <algorithm>
 #include <errno.h>
 #include <sys/stat.h>
-#include "ngsLCA.h"
+
 #include "ngsLCA_cli.h"
 #include "ngsLCA_format.h"
+
 
 int SIG_COND =1;//if we catch signal then quit program nicely
 int VERBOSE =1;
 int really_kill =3;
 
 void handler(int s) {
-
-  if(VERBOSE)
+if(VERBOSE)
     fprintf(stderr,"\n\t-> Caught SIGNAL: Will try to exit nicely (no more threads are created.\n\t\t\t  We will wait for the current threads to finish)\n");
   
   if(--really_kill!=3)
@@ -37,7 +35,6 @@ void handler(int s) {
     exit(0);
   VERBOSE=0;
   SIG_COND=0;
- 
 }
 
  //we are threading so we want make a nice signal handler for ctrl+c
@@ -54,11 +51,6 @@ void catchkill(){
 int2int specWeight;// Number of reads that map uniquely to a species.
 int2int i2i_missing;//contains counter of missing hits for each taxid that doesnt exists in acc2taxid
 char2int c2i_missing;//contains counter of missing hits for each taxid that doesnt exists in acc2taxid
-
-int fexists(const char* str){///@param str Filename given as a string.
-  struct stat buffer ;
-  return (stat(str, &buffer )==0 ); /// @return Function returns 1 if file exists.
-}
 
 void mod_db(int *in,int *out,int2int &parent, int2char &rank,int2char &name_map){
   for(int i=0;i<24;i++){
@@ -99,69 +91,38 @@ void strip(char *line){
 }
 
 
-
  
-void * bamRefId2tax(const char *fname,bam_hdr_t *hdr ){
-  FILE *FP=NULL;
-  if(0)
-    FP=fopen("delmeme.bin","wb");
-  fprintf(stderr,"\t-> bam_hdr_t: %p \n",hdr);
-  int2int *am=NULL;
-  char2int *cm = NULL;
-  
-  if(hdr!=NULL)
-    am = new int2int;
-  else
-    cm = new char2int;
-  
-  gzFile gz= Z_NULL;
-  gz=gzopen(fname,"rb");
-  if(gz==Z_NULL){
-    fprintf(stderr,"\t-> Problems opening file: \'%s\'\n",fname);
-    exit(0);
-  }
-  char buf[4096];
-  int at=0;
-  char buf2[4096];
-  while(gzgets(gz,buf,4096)){
-    if(!((at++ %100000 ) ))
-      if(isatty(fileno(stderr)))
-	fprintf(stderr,"\r\t-> At linenr: %d in \'%s\'      ",at,fname);
-    strcpy(buf2,buf);
-    strtok(buf,"\t\n ");
-    char *key =strtok(NULL,"\t\n ");
-    int val = atoi(strtok(NULL,"\t\n "));
-    if(hdr==NULL){
-      if(cm->find(key)!=cm->end())
-	fprintf(stderr,"\t-> Duplicate entries found \'%s\'\n",key);
-      (*cm)[strdup(key)]=val;
- 
-    }else{
-      //check if the key exists in the bamheader, if not then skip this taxid
+int2int *bamRefId2tax(bam_hdr_t *hdr,char *acc2taxfile){
+fprintf(stderr,"\t-> Starting to extract (acc->taxid) from binary file: \'%s\'\n",acc2taxfile);
+const char *CONSTNAME = "delmeme.bin";
+  //this contains refname(as int) -> taxid
+  int2int *am= new int2int;
+  gzFile FP=Z_NULL;
+  FP = gzopen(acc2taxfile,"rb");
+  assert(FP!=Z_NULL);
+int key_l;
+int at=0;
+  while(sizeof(int)==gzread(FP,&key_l,sizeof(int))) {
+ at++;
+if(!((at++ %100000 ) ))
+  if(isatty(fileno(stderr)))
+    fprintf(stderr,"\r\t-> At entry: %d in \'%s\'      ",at,acc2taxfile);
+      char *key =(char*) calloc(key_l+1,sizeof(char));
+      assert(key_l=gzread(FP,key,key_l));
+      int val;
+      assert(sizeof(int)==gzread(FP,&val,sizeof(int)));
       int valinbam = bam_name2id(hdr,key);
-      if(valinbam==-1)
-	continue;
-      if(FP)
-	fwrite(buf2,1,strlen(buf2),FP);     
-      if(am->find(valinbam)!=am->end())
+      if(valinbam<0)
+        continue;
+      if(am->find(valinbam)!=am->end()){
 	fprintf(stderr,"\t-> Duplicate entries found \'%s\'\n",key);
-      else{
+      }else
 	(*am)[valinbam] = val;
-      }
-    }
-
   }
-  if(FP)
-    fclose(FP);
-  fprintf(stderr,"\n");
-
-  if(hdr!=NULL){
-    fprintf(stderr,"\t-> [%s] Number of entries to use from accesion to taxid: %lu\n",fname,am->size());
-    return am;
-  }else{
-    fprintf(stderr,"\t-> [%s] Number of entries to use from accesion to taxid: %lu\n",fname,cm->size());
-    return cm;
-  }
+  
+  
+  fprintf(stderr,"\t-> Number of entries to use from accesion to taxid: %lu\n",am->size());
+  return am;
 }
 
 int nodes2root(int taxa,int2int &parent){
@@ -826,8 +787,6 @@ int2node makeNodes(int2int &parent){
     }
     
   }
-
-  
   return ret;
 }
 #endif
@@ -860,9 +819,8 @@ int main(int argc, char **argv){
   int2int *i2i=NULL;
   char2int *c2i=NULL;
   if(p->header)
-    i2i=(int2int*) bamRefId2tax(p->acc2taxfile,p->header);
-  else
-    c2i=(char2int*) bamRefId2tax(p->acc2taxfile,p->header);
+    i2i=(int2int*) bamRefId2tax(p->header,"delmeme.bin");
+
   //map of taxid -> taxid
   int2int parent;
   //map of taxid -> rank

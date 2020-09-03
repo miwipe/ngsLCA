@@ -1,11 +1,31 @@
 #pragma once
-
-#ifdef __cplusplus
-extern "C" {
-#endif
 #include <zlib.h>
 #include <htslib/sam.h>
-  
+#include <cstring>
+#include <vector>
+#include <map>
+#include <sys/stat.h>
+#include <pthread.h>
+
+struct cmp_str
+{
+   bool operator()(char const *a, char const *b) const
+   {
+      return std::strcmp(a, b) < 0;
+   }
+};
+
+typedef struct{
+  int up;
+  std::vector<int> down;
+  int dist2root;
+}node;
+
+typedef std::map<int,char *> int2char;
+typedef std::map<int,int> int2int;
+typedef std::map<int,node> int2node;
+typedef std::map<char *,int,cmp_str> char2int;
+
 typedef struct{
   //filenames
   char *htsfile;//bam,cram,sam
@@ -28,14 +48,10 @@ typedef struct{
   int minmapq;
   int discard; //or bitoperation with the flag of the read
   int minlength;
+  char2int *charref2taxid;
 }pars;
-
 
 pars *get_pars(int argc,char **argv);
 void print_pars(FILE *fp,pars *p);
 void pars_free(pars *p);
-  
-#ifdef __cplusplus
-}
-#endif
-  
+int fexists(const char* str);
