@@ -29,7 +29,6 @@ typedef std::map<char *,int,cmp_str> char2int;
 typedef struct{
   //filenames
   char *htsfile;//bam,cram,sam
-  gzFile gz_sam;//used for sam without header
   char *nodesfile;
   char *namesfile;
   char *acc2taxfile;

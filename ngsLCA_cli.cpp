@@ -23,7 +23,6 @@ pars *pars_init(){
   p->outnames="outnames";
   p->minmapq=0;
   p->discard=516;//discard unmapped and read fail
-  p->gz_sam = Z_NULL;
   p->minlength=-1;
   p->charref2taxid = NULL;
   return p;
@@ -42,17 +41,23 @@ int fexists(const char* str){///@param str Filename given as a string.
   return (stat(str, &buffer )==0 ); /// @return Function returns 1 if file exists.
 }
 
+int fexists2(const char*str1,const char* str2){
+  unsigned tmp_l = strlen(str1)+strlen(str2)+5;
+  char tmp[tmp_l];
+  snprintf(tmp,tmp_l,"%s%s",str1,str2);
+  return fexists(tmp);
+}
+
+
 
 void *read_header_thread(void *ptr){
   time_t t=time(NULL);
   pars *p = (pars *) ptr;
-  if(p->gz_sam==Z_NULL){
-    fprintf(stderr,"\t-> [thread1] Will read header\n");
-    p->hts = hts_open(p->htsfile,"r");
-    p->header = sam_hdr_read(p->hts);
-    assert(p->header);
-    fprintf(stderr,"\t-> [thread1] Done reading header: %.2f sec, header contains: %d \n",(float)(time(NULL) - t),p->header->n_targets);
-  }
+  fprintf(stderr,"\t-> [thread1] Will read header\n");
+  p->hts = hts_open(p->htsfile,"r");
+  p->header = sam_hdr_read(p->hts);
+  assert(p->header);
+  fprintf(stderr,"\t-> [thread1] Done reading header: %.2f sec, header contains: %d \n",(float)(time(NULL) - t),p->header->n_targets);
   pthread_mutex_unlock(&mutex1);
 }
 
@@ -147,7 +152,6 @@ pars *get_pars(int argc,char **argv){
     
     if(!strcasecmp("-bam",key)) p->htsfile=strdup(val);
     else if(!strcasecmp("-names",key)) p->namesfile=strdup(val);
-    else if(!strcasecmp("-sam_noheader",key)) p->gz_sam=gzopen(val,"r");
     else if(!strcasecmp("-nodes",key)) p->nodesfile=strdup(val);
     else if(!strcasecmp("-acc2tax",key)) p->acc2taxfile=strdup(val);
     else if(!strcasecmp("-editdistMin",key)) p->editdistMin=atoi(val);
