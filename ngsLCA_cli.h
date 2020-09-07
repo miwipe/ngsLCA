@@ -54,3 +54,9 @@ pars *get_pars(int argc,char **argv);
 void print_pars(FILE *fp,pars *p);
 void pars_free(pars *p);
 int fexists(const char* str);
+int fexists2(const char*str1,const char* str2);
+int fexists3(const char*str1,const char* str2,const char *str3);
+BGZF *getbgzf(const char*str1,const char *mode,int nthreads);
+BGZF *getbgzf2(const char*str1,const char *str2,const char *mode,int nthreads);
+BGZF *getbgzf3(const char*str1,const char *str2,const char *str3,const char *mode,int nthreads);
+

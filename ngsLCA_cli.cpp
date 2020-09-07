@@ -3,7 +3,7 @@
 #include <assert.h>
 #include <string.h>
 #include <cassert>
-
+#include <htslib/bgzf.h>
 #include "ngsLCA_cli.h"
 pthread_mutex_t mutex1 = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t mutex2 = PTHREAD_MUTEX_INITIALIZER;
@@ -37,6 +37,7 @@ void pars_free(pars *p){
 
 
 int fexists(const char* str){///@param str Filename given as a string.
+  fprintf(stderr,"\t-> Checking if exits: \'%s\'\n",str);
   struct stat buffer ;
   return (stat(str, &buffer )==0 ); /// @return Function returns 1 if file exists.
 }
@@ -45,6 +46,14 @@ int fexists2(const char*str1,const char* str2){
   unsigned tmp_l = strlen(str1)+strlen(str2)+5;
   char tmp[tmp_l];
   snprintf(tmp,tmp_l,"%s%s",str1,str2);
+  return fexists(tmp);
+}
+
+
+int fexists3(const char*str1,const char* str2,const char *str3){
+  unsigned tmp_l = strlen(str1)+strlen(str2)+strlen(str3)+5;
+  char tmp[tmp_l];
+  snprintf(tmp,tmp_l,"%s%s%s",str1,str2,str3);
   return fexists(tmp);
 }
 
@@ -209,6 +218,31 @@ void print_pars(FILE *fp,pars *p){
 
 }
 
+BGZF *getbgzf(const char*str1,const char *mode,int nthreads){
+  BGZF *fp = NULL;
+  fp = bgzf_open(str1,mode);
+  fprintf(stderr,"\t-> opening file: \'%s\' mode: \'%s\'\n",str1,mode);
+  assert(fp!=NULL);
+  if(nthreads>1){
+    fprintf(stderr,"\t-> Setting threads to: %d \n",nthreads);
+    bgzf_mt(fp,nthreads,64);
+  }
+  return fp;
+}
+
+BGZF *getbgzf2(const char*str1,const char *str2,const char *mode,int nthreads){
+  unsigned tmp_l = strlen(str1)+strlen(str2)+5;
+  char tmp[tmp_l];
+  snprintf(tmp,tmp_l,"%s%s",str1,str2);
+  return  getbgzf(tmp,mode,nthreads);
+}
+
+BGZF *getbgzf3(const char*str1,const char *str2,const char *str3,const char *mode,int nthreads){
+  unsigned tmp_l = strlen(str1)+strlen(str2)+strlen(str3)+5;
+  char tmp[tmp_l];
+  snprintf(tmp,tmp_l,"%s%s%s",str1,str2,str3);
+  return  getbgzf(tmp,mode,nthreads);
+}
 
 #ifdef __WITH_MAIN__
 int main(int argc,char**argv){

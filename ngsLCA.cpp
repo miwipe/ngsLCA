@@ -15,6 +15,8 @@ int mod_out[]=  {1333996 , 1333996 ,1582270,1914213,1917265,1915309 ,263865,2801
 #include <algorithm>
 #include <errno.h>
 #include <sys/stat.h>
+#include <htslib/bgzf.h>
+#include <htslib/kstring.h>
 
 #include "ngsLCA_cli.h"
 #include "ngsLCA_format.h"
@@ -92,36 +94,66 @@ void strip(char *line){
 
 
  
-int2int *bamRefId2tax(bam_hdr_t *hdr,char *acc2taxfile){
-  time_t t=time(NULL);
+int2int *bamRefId2tax(bam_hdr_t *hdr,char *acc2taxfile,char *bamfile) { 
 fprintf(stderr,"\t-> Starting to extract (acc->taxid) from binary file: \'%s\'\n",acc2taxfile);
-const char *CONSTNAME = "delmeme.bin";
+
+int dodump = !fexists3(basename(acc2taxfile),basename(bamfile),".bin");
+
+fprintf(stderr,"check if exists: %d \n", dodump);
+
+time_t t=time(NULL);
+BGZF *fp= NULL;
+if(dodump)
+  fp = getbgzf3(basename(acc2taxfile),basename(bamfile),".bin","wb",4);
+ else
+   fp =  getbgzf3(basename(acc2taxfile),basename(bamfile),".bin","rb",4);
   //this contains refname(as int) -> taxid
-  int2int *am= new int2int;
-  gzFile FP=Z_NULL;
-  FP = gzopen(acc2taxfile,"rb");
-  assert(FP!=Z_NULL);
-int key_l;
-int at=0;
-  while(sizeof(int)==gzread(FP,&key_l,sizeof(int))) {
- at++;
-if(!((at++ %100000 ) ))
-  if(isatty(fileno(stderr)))
-    fprintf(stderr,"\r\t-> At entry: %d in \'%s\'      ",at,acc2taxfile);
-      char *key =(char*) calloc(key_l+1,sizeof(char));
-      assert(key_l=gzread(FP,key,key_l));
-      int val;
-      assert(sizeof(int)==gzread(FP,&val,sizeof(int)));
+int2int *am= new int2int;
+
+
+if(dodump){
+    char buf[4096];
+    int at=0;
+    char buf2[4096];
+    extern int SIG_COND;
+    kstring_t *kstr =(kstring_t *)malloc(sizeof(kstring_t));
+    kstr->l=kstr->m = 0;
+    kstr->s = NULL;
+    BGZF *fp2 = getbgzf(acc2taxfile,"rb",2);
+    bgzf_getline(fp2,'\n',kstr);//skip header
+    while(SIG_COND&&bgzf_getline(fp2,'\n',kstr)){
+if(kstr->l==0)
+  break;
+//fprintf(stderr,"at: %d = '%s\'\n",at,kstr->s);
+      if(!((at++ %100000 ) ))
+	if(isatty(fileno(stderr)))
+	  fprintf(stderr,"\r\t-> At linenr: %d in \'%s\'      ",at,acc2taxfile);
+      char *tok = strtok(kstr->s,"\t\n ");
+      char *key =strtok(NULL,"\t\n ");
+tok = strtok(NULL,"\t\n ");
+int val = atoi(tok);
       int valinbam = bam_name2id(hdr,key);
-      if(valinbam<0)
-        continue;
-      if(am->find(valinbam)!=am->end()){
+if(valinbam==-1)
+  continue;
+      bgzf_write(fp,&valinbam,sizeof(int));
+      bgzf_write(fp,&val,sizeof(int));
+//fprintf(stderr,"key: %s val: %d valinbam:%d\n",key,val,valinbam);
+
+      if(am->find(valinbam)!=am->end())
 	fprintf(stderr,"\t-> Duplicate entries found \'%s\'\n",key);
-      }else
-	(*am)[valinbam] = val;
+      (*am)[valinbam] = val;
+kstr->l =0;
+    }
+bgzf_close(fp2);
+}else{
+int valinbam,val;
+while(bgzf_read(fp,&valinbam,sizeof(int))){
+bgzf_read(fp,&val,sizeof(int));
+  (*am)[valinbam] = val;
   }
-  
-  
+}
+
+bgzf_close(fp);
 fprintf(stderr,"\t-> Number of entries to use from accesion to taxid: %lu, time taken: %.2f sec\n",am->size(),(float)(time(NULL) - t));
   return am;
 }
@@ -314,7 +346,7 @@ std::vector<int> purge(std::vector<int> &taxids,std::vector<int> &editdist){
 
 
 void hts(FILE *fp,samFile *fp_in,int2int &i2i,int2int& parent,bam_hdr_t *hdr,int2char &rank, int2char &name_map,FILE *log,int minmapq,int discard,int editMin, int editMax, double scoreLow,double scoreHigh,int minlength){
-  fprintf(stderr,"[%s] \t-> editMin:%d editmMax:%d scoreLow:%f scoreHigh:%f minlength:%d\n",__FUNCTION__,editMin,editMax,scoreLow,scoreHigh,minlength);
+  fprintf(stderr,"[%s] \t-> editMin:%d editmMax:%d scoreLow:%f scoreHigh:%f minlength:%d discard: %d\n",__FUNCTION__,editMin,editMax,scoreLow,scoreHigh,minlength,discard);
   assert(fp_in!=NULL);
   bam1_t *aln = bam_init1(); //initialize an alignment
   int comp ;
@@ -336,8 +368,9 @@ void hts(FILE *fp,samFile *fp_in,int2int &i2i,int2int& parent,bam_hdr_t *hdr,int
       fprintf(stderr,"discarding due to low mapq");
       continue;
     }
-    //    fprintf(stderr,"Discard: %d coreflag:%d OR %d\n",discard,aln->core.flag,aln->core.flag&discard);
+    
     if(discard>0&&(aln->core.flag&discard)){
+      fprintf(stderr,"Discard: %d coreflag:%d OR %d\n",discard,aln->core.flag,aln->core.flag&discard);
       fprintf(stderr,"Discardding due to core flag\n");
       continue;
     }
@@ -615,9 +648,6 @@ int2node makeNodes(int2int &parent){
 }
 #endif
 
-
-
-
 int main(int argc, char **argv){
   if(argc==1){
     fprintf(stderr,"\t-> ./ngsLCA -names -nodes -acc2tax [-editdist[min/max] -simscore[low/high] -minmapq -discard] -bam \n");
@@ -642,7 +672,7 @@ int main(int argc, char **argv){
 
   int2int *i2i=NULL;
   if(p->header)
-    i2i=(int2int*) bamRefId2tax(p->header,"delmeme.bin");
+    i2i=(int2int*) bamRefId2tax(p->header,p->acc2taxfile,p->htsfile);
 
   //map of taxid -> taxid
   int2int parent;
