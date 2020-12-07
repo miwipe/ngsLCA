@@ -287,6 +287,7 @@ ReadIn = function(FileList,path){
   if(!is.na(metadata)){
     Mdata = read.csv(metadata, quote="", stringsAsFactors=F, header=F,sep = "\t",comment.char = "#")
     Mdata$V1 = sub(".lca","",Mdata$V1)
+    Mdata$V3 = as.numeric(Mdata$V3)
     Mdata = Mdata[order(Mdata$V3),]
     
     N = 0
