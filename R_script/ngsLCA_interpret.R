@@ -260,7 +260,7 @@ ReadIn = function(FileList,path){
   #read in
   for (i in 1:length(FileList)) {
     X2.1 =  read.csv(paste(path, FileList[i], sep=""), header=F, sep="\t", stringsAsFactors=F, fill=T, 
-                     col.names = paste0("V",seq_len(60)),comment.char = "#")
+                     col.names = paste0("V",seq_len(60)),skip=1)
     
     if(dim(X2.1)[1]>0){
       
@@ -369,13 +369,13 @@ if ("pre-process" %in% func) {
   
   #generating the taxa branch
   PATH = read.csv(paste(path, file.list1[1], sep=""), header=F, sep="\t", stringsAsFactors=F, 
-                  fill=T, col.names = paste0("V",seq_len(60)),comment.char = "#")
+                  fill=T, col.names = paste0("V",seq_len(60)),skip=1)
   PATH = PATH[,-1]
   
   if (length(file.list1)>1) {
     for (i in 2:length(file.list1)) {
       PATH.1 = read.csv(paste(path, file.list1[i], sep=""), header=F, sep="\t", stringsAsFactors=F, 
-                        fill=T, col.names = paste0("V",seq_len(60)),comment.char = "#")
+                        fill=T, col.names = paste0("V",seq_len(60)),skip=1)
       PATH.1 = PATH.1[,-1]
       PATH = rbind(PATH,PATH.1)
       PATH = PATH[!duplicated(PATH[,1]),]
