@@ -14,6 +14,7 @@ ngsLCA requires [HTSlib](https://github.com/samtools/htslib) which is a common l
 git clone https://github.com/SAMtools/htslib
 git clone https://github.com/miwipe/ngsLCA
 cd htslib
+git submodule update --init —recursive
 make
 cd ../ngsLCA
 make HTSSRC=../htslib
