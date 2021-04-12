@@ -175,14 +175,16 @@ if (!is.na(remove.taxa)) {
   remove.taxa1 = as.numeric(strsplit(remove.taxa,",")[[1]])
   
   if (any(is.na(remove.taxa1))) {
-    remove.taxa1 = read.csv(remove.taxa,stringsAsFactors = F,header = F)
-    remove.taxa1 = as.numeric(remove.taxa1[,1])
+    if (ile.exists(remove.taxa)) {
+        remove.taxa1 = read.csv(remove.taxa,stringsAsFactors = F,header = F)
+        remove.taxa1 = as.numeric(remove.taxa1[,1])
+      }
   }
   
   if (is.numeric(remove.taxa1)) {
     remove.taxa = remove.taxa1
   }else{
-    cat("\n\n\tError -> The 'remove.taxa' contains no-numeric values, please only input taxID to it.\n\n")
+    cat("\n\n\tError -> 'remove.taxa' contains no-numeric values, please only input taxID to it.\n\n")
     q("no")
   }
   
@@ -430,6 +432,12 @@ if ("filter" %in% func) {
     if (sum(DF2.2[,i])>0) {
       DF2.2[(DF2.2[,i] < sum(DF2.2[,i])*thr2),i] = 0
     }
+  }
+  
+   if (dim(DF2.2)[2]>2) {
+    DF2.2 = DF2.2[which(rowSums(DF2.2[,-1]) !=0),]
+  }else{
+    DF2.2 = DF2.2[which(DF2.2[,2] !=0),]
   }
   
   if (dim(DF2.2)[1]>0) {
