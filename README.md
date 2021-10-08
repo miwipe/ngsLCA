@@ -61,7 +61,7 @@ samtools merge -@ 10 -n merged.out.bam *.bam
 samtools sort -n -T /TMP_folder/ -O bam -o file.sort.bam -@ 5 tmp.bam.merged -m 2G
 ```
 
-# Running the ngsLCA main program
+# Running ngsLCA main program
 ## Downloading resource files from NCBI 
 ```
 mkdir ncbi_tax_dmp;
