@@ -103,7 +103,7 @@ The file is tab seperated and the first column contains the read metadata which 
 The second column contain the lowest taxonomic node the read has been assigned to, seperated by colon is the 'NCBI taxID':'taxon name':'taxonomic level' assigned to. Following columns contain the taxonomic path higher in the NCBI taxonomy for each assignment. 
 
 
-# Running the ngsLCA R package
+# Running ngsLCA R package
 ## Example workflow
 Running ngsLCA R package (and this example workflow) requires all lca files to be processed being placed in a folder as input, with each input lca file normally representing a sample. This example workflow will run through all ngsLCA R functions. The output files and results in this example will be generated into “Desktop/project_files/lca_files/run03”.
 
