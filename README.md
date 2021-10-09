@@ -31,9 +31,7 @@ remotes::install_github("wyc661217/ngsLCA")
 ```
 
 # Test dataset
-For a quick test of the ngsLCA, alignment files in bam format as inout can be found in the folder: "bam_files".
-
-To generate alignment files from your own data (in bam/sam) please follow this quick guide on how to prepare your own data:
+For a quick test of whether the installation of ngsLCA was successful, input alignments files in bam format can be found in the folder: "bam_files". To generate alignment files from your own data (in bam/sam/sam.gz) please follow this quick guide:
 
 1. Download raw sequencing data, example fastq-files can be found in the fastq folder (It is assumed that all fastq-files have been demultiplexed, trimmed and quality controlled). 
 
