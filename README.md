@@ -35,7 +35,7 @@ For a quick test of whether the installation of ngsLCA was successful, input ali
 
 1. Download raw sequencing data, example fastq-files can be found in the fastq folder (It is assumed that all fastq-files have been demultiplexed, trimmed and quality controlled). 
 
-2. Download a database of your own choice. The toolit is built upon the NCBI taxonomy therefore requires the reference database(s) complying to the NCBI format, i.e. fasta header should contain accession ID as the first string that appears in the NCBI access2taxID file, and the corresponded taxID is present in NCBI taxonomy dmp files. This could be the NCBI-nt and NCBI-RefSeq, for example NCBI-Refseq plastid database: 
+2. Download a database of your own choice. The toolkit is built upon the NCBI taxonomy therefore requires the reference database(s) complying to the NCBI format, i.e., fasta header should contain accession ID as the first string that appears in the NCBI access2taxID file, and the corresponded taxaID is present in NCBI taxonomy dmp files. This can be the NCBI-nt, NCBI-RefSeq, or a subset like the NCBI-RefSeq plastid database:
 
 ```
 mkdir refseq_plastids;
@@ -47,16 +47,16 @@ rm *.fna;
 bowtie2-build --threads 5 plastids.fa plastids 
 ```
 
-3. Align your trimmed and quality checked reads against the database 
+3. Align your quality checked reads against the database, an example:
 ```
-bowtie2 --threads 10 -k 5000 -x refseq_plastids/plastids -U fastq_file.fq --no-unal | samtools view -bS - > file_name.database_name.bam
+bowtie2 --threads 10 -k 1000 -x refseq_plastids/plastids -U file_name.fq --no-unal  | samtools view -bS - > file_name.plastids.bam
 ```
 
-4. If more than one database has been used as reference all resulting bam files needs to be merged and sorted using samtools (important as the LCA assumes that all unique readIDs are aligned next to each other). See example below:
+4. If more than one database has been used as reference, all resulting bam files need to be merged and sorted. This is important as ngsLCA assumes that all unique readIDs are aligned next to each other, an example:
 
 ```
-samtools merge -@ 10 -n merged.out.bam *.bam
-samtools sort -n -T /TMP_folder/ -O bam -o file.sort.bam -@ 5 tmp.bam.merged -m 2G
+samtools merge -@ 10 -n file_name.merged.bam file_name.*.bam
+samtools sort -@ 10 -m 2G -n -T /TMP_folder/ -O bam -o file_name.merged.sorted.bam file_name.merged.bam
 ```
 
 # Running ngsLCA main program
@@ -70,27 +70,27 @@ wget https://ftp.ncbi.nlm.nih.gov/pub/taxonomy/accession2taxid/nucl_gb.accession
 gunzip nucl_gb.accession2taxid.gz;
 ```
 
-## Running the ngsLCA main program
-The ngsLCA main program takes into account a chosen similarity interval between each read and its reference in the generated bam/sam file. It has been tested downloading the nt, refseq as well as individual genomes and fasta sequences. The similarity can be set as either an edit distance [-editdist[min/max]] eg. number of mismatches between the read and each alignment to a reference genomes or as a similarity distance [-simscore[low/high]] eg. a percentage of mismatches between the read and each alignment to a reference genome.
+## Running ngsLCA main program
+The ngsLCA main program considers a chosen similarity interval between each read and its reference in the generated bam/sam file. It has been tested downloading the nt, refseq as well as individual genomes and fasta sequences. The similarity can be set as an edit distance [-editdist[min/max]], i.e., number of mismatches between the read to reference genome, or as a similarity distance [-simscore[low/high]], i.e., percentage of mismatches between the read to reference genome. Edit distance can be a number between 0-10, while the similarity score is a number between 0-1.
 
-Edit distance can be a number between 0-10, while the similarity score is a number between 0-1. 
-
-Example for running the ngsLCA main program with 0 edit distances to reference.
+Example for running the ngsLCA main program with 0 edit distances to reference:
 ```
-ngsLCA/ngsLCA -editdistmin 0 -editdistmax 0 -names ncbi_tax_dmp/names.dmp.gz -nodes ncbi_tax_dmp/nodes.dmp.gz -acc2tax ncbi_tax_dmp/nucl_gb.accession2taxid_24april.gz -bam sorted_bam_file.bam -outnames outfile.ed0
+ngsLCA/ngsLCA -editdistmin 0 -editdistmax 0 -names ncbi_tax_dmp/names.dmp.gz -nodes ncbi_tax_dmp/nodes.dmp.gz -acc2tax ncbi_tax_dmp/nucl_gb.accession2taxid.gz -bam file_name.merged.sorted.bam -outnames outfile.ed0
 ```
 
-Example for running the ngsLCA main program with an interval of edit distances (min 0, max 5) to reference. In this case the algorithm will perform an LCA on all alignment of a given read that have between 0 and 5 mismatches. NOTE! It will not discriminate between better or worse alignments within the defined interval.
+Example for running the ngsLCA main program with an interval of edit distances (min 0, max 5) to reference. In this case the algorithm will perform an LCA on all alignments of a given read that have between 0 and 5 mismatches. It will not discriminate between better or worse alignments within the defined interval.
 ```
-ngsLCA/ngsLCA -editdistmin 0 -editdistmax 5 -names ncbi_tax_dmp/names.dmp -nodes ncbi_tax_dmp/nodes.dmp -acc2tax ncbi_tax_dmp/nucl_gb.accession2taxid -bam sorted_bam_file.bam -outnames outfile
+ngsLCA/ngsLCA -editdistmin 0 -editdistmax 5 -names ncbi_tax_dmp/names.dmp -nodes ncbi_tax_dmp/nodes.dmp -acc2tax ncbi_tax_dmp/nucl_gb.accession2taxid.gz -bam file_name.merged.sorted.bam -outnames outfile
 ```
-If the editditmin is for example set to 2 the algorithm will only parse reads with the best alignment of 2 or more mismatches and not parse reads that have better alignments. This allows for a stepwise examination of the taxonomic profiles generated by allowing gradually more mismatches. 
+
+If the editditmin is set to 2, the algorithm will only parse reads with the best alignment of 2 or more mismatches and not parse reads that have better alignments. This allows for a stepwise examination of the taxonomic profiles generated by allowing gradually more mismatches.
 ```
-ngsLCA/ngsLCA -editdistmin 2 -editdistmax 2 -names ncbi_tax_dmp/names.dmp -nodes ncbi_tax_dmp/nodes.dmp -acc2tax ncbi_tax_dmp/nucl_gb.accession2taxid -bam sorted_bam_file.bam -outnames outfile.ed2
+ngsLCA/ngsLCA -editdistmin 2 -names ncbi_tax_dmp/names.dmp -nodes ncbi_tax_dmp/nodes.dmp -acc2tax ncbi_tax_dmp/nucl_gb.accession2taxid.gz -bam file_name.merged.sorted.bam -outnames outfile.ed2
 ```
-The similarity score function works exactly the same way as for the edit distance, with the exception that the similarity to the reference is now calculated as a percentage and hence takes the length of the read into account. Example for running the ngsLCA main program with similarity scores (95-100% similarity) [-simscore[low/high]] 0.95-1.0. 
+
+The similarity score function works in the same way as for the edit distance, with the exception that the similarity to the reference is now calculated as a percentage and hence takes the length of the read into account. Example for running the ngsLCA main program with similarity scores (95-100% similarity) [-simscore[low/high]] 0.95-1.0:
 ```
-ngsLCA/ngsLCA -simscorelow 0.95 -simscorehigh 1.0 -names ncbi_tax_dmp/names.dmp -nodes ncbi_tax_dmp/nodes.dmp -acc2tax ncbi_tax_dmp/nucl_gb.accession2taxid -bam sorted_bam_file.bam -outnames outfile.ss095to1
+ngsLCA/ngsLCA -simscorelow 0.95 -simscorehigh 1.0 -names ncbi_tax_dmp/names.dmp -nodes ncbi_tax_dmp/nodes.dmp -acc2tax ncbi_tax_dmp/nucl_gb.accession2taxid.gz -bam sorted_bam_file.bam -outnames outfile.ss095to1
 ```
 
 ## The .lca output file format
