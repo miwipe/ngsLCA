@@ -90,26 +90,23 @@ ngsLCA/ngsLCA -editdistmin 2 -names ncbi_tax_dmp/names.dmp -nodes ncbi_tax_dmp/n
 
 The similarity score function works in the same way as for the edit distance, with the exception that the similarity to the reference is now calculated as a percentage and hence takes the length of the read into account. Example for running the ngsLCA main program with similarity scores (95-100% similarity) [-simscore[low/high]] 0.95-1.0:
 ```
-ngsLCA/ngsLCA -simscorelow 0.95 -simscorehigh 1.0 -names ncbi_tax_dmp/names.dmp -nodes ncbi_tax_dmp/nodes.dmp -acc2tax ncbi_tax_dmp/nucl_gb.accession2taxid.gz -bam sorted_bam_file.bam -outnames outfile.ss095to1
+ngsLCA/ngsLCA -simscorelow 0.95 -simscorehigh 1.0 -names ncbi_tax_dmp/names.dmp -nodes ncbi_tax_dmp/nodes.dmp -acc2tax ncbi_tax_dmp/nucl_gb.accession2taxid.gz -bam file_name.merged.sorted.bam  -outnames outfile.ss095to1
 ```
 
-## The .lca output file format
-The resulting file (.lca) from the ngsLCA main program is a regular text file in which each line contains a unique read that aligned to a reference with the given simlarity speficified when executing ngsLCA. 
+## The output file (.lca) format
+The resulting file (.lca) from the ngsLCA main program is a flat text file in which each line contains a unique read that has been assigned to its LCA with the specified similarity.
 
-The file is tab seperated and the first column contains the read metadata which is subdivided in a colon seperated style and the first is the read ID (colon seperated column 1-7), the query sequence (csc 8), the lenght of the sequence (csc 9), the number hits to a reference in the database(s) (scs 10). 
-
-The second column contain the lowest taxonomic node the read has been assigned to, seperated by colon is the 'NCBI taxID':'taxon name':'taxonomic level' assigned to. Following columns contain the taxonomic path higher in the NCBI taxonomy for each assignment. 
+The file is tab separated. The first column contains the read metadata which is colon separated, including read ID (colon separated column 1-7), the query sequence (8), length of the sequence (9), and number of hits to the reference (10). The second column contains the lowest taxonomic node the read has been assigned to, separated by colon is the 'NCBI taxID':'taxon name':'taxonomic level' assigned to. Following columns contain the taxonomic path higher in the NCBI taxonomy for each assignment. The second column is the assigned LCA for the query read. It is also colon separated as 'NCBI taxID':'taxon name':'taxonomic level'. The third column contains the full NCBI taxonomic path for the LCA. 
 
 
 # Running ngsLCA R package
 ## Example workflow
-Running ngsLCA R package (and this example workflow) requires all lca files to be processed being placed in a folder as input, with each input lca file normally representing a sample. This example workflow will run through all ngsLCA R functions. The output files and results in this example will be generated into “Desktop/project_files/lca_files/run03”.
+Running ngsLCA R package requires all lca files to be processed being placed in a folder as input, with each input lca file normally representing a sample. The following example workflow will run through all ngsLCA R functions. The output files and results in this example will be generated into “Desktop/project_files/lca_files/run03”.
 
 Define work directory and name of the run:
 
 ``` r
 library(ngsLCA)
-
 working_directory="Desktop/project_files/lca_files/" #change it to the path of your lca files folder.
 run_name="run03"
 ```
@@ -180,7 +177,7 @@ Generate taxa abundance heatmaps:
 ``` r
 ngsLCA_heatmap(path=working_directory,
                run=run_name,
-               taxa.number=30)
+               taxa.number=20)
 ```
 
 Generate taxa abundance barplots:
@@ -189,6 +186,14 @@ Generate taxa abundance barplots:
 ngsLCA_barplot(path=working_directory,
                run=run_name,
                taxa.number=20)
+```
+
+Generate taxa abundance stratplots:
+
+``` r
+ngsLCA_stratplot(path=working_directory,
+                 run=run_name,
+                 taxa.number=10)
 ```
 
 Perform rarefaction on taxa reads abundance:
@@ -205,12 +210,4 @@ ngsLCA_NMDS(path=working_directory,
             run=run_name,
             dimension=2,
             trymax=10)
-```
-
-Generate taxa abundance stratplots:
-
-``` r
-ngsLCA_stratplot(path=working_directory,
-                 run=run_name,
-                 taxa.number=20)
 ```
