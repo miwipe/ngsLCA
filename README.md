@@ -96,7 +96,7 @@ ngsLCA/ngsLCA -simscorelow 0.95 -simscorehigh 1.0 -names ncbi_tax_dmp/names.dmp 
 ## The output file (.lca) format
 The resulting file (.lca) from the ngsLCA main program is a flat text file in which each line contains a unique read that has been assigned to its LCA with the specified similarity.
 
-The file is tab separated. The first column contains the read metadata which is colon separated, including read ID (colon separated column 1-7), the query sequence (8), length of the sequence (9), and number of hits to the reference (10). The second column contains the lowest taxonomic node the read has been assigned to, separated by colon is the 'NCBI taxID':'taxon name':'taxonomic level' assigned to. Following columns contain the taxonomic path higher in the NCBI taxonomy for each assignment. The second column is the assigned LCA for the query read. It is also colon separated as 'NCBI taxID':'taxon name':'taxonomic level'. The third column contains the full NCBI taxonomic path for the LCA. 
+The file is tab separated. The first column contains the read metadata which is colon separated, including read ID (colon separated column 1-7), the query sequence (8), length of the sequence (9), and number of hits to the reference (10). The second column contains the LCA assigned to that read, separated by colon is the 'NCBI taxaID':'taxon name':'taxonomic level'. Following columns contain the full taxonomic path higher in the NCBI taxonomy for the LCA.
 
 
 # Running ngsLCA R package
