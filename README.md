@@ -1,12 +1,12 @@
 # ngsLCA
 [![Build Status](https://travis-ci.org/miwipe/ngsLCA.svg?branch=master)](https://travis-ci.org/miwipe/ngsLCA)
 
-This is the official development repository for ngsLCA (next generation sequence Least Common Ancestor algorithm). The toolkit includes two modules, ngsLCA main program and ngsLCA R package. The ngsLCA main program provides a fast and flexible taxonomic classification of DNA reads aligned to reference databases containing multiple organisms. The classification builds upon the NCBI taxonomy and performs a naïve least common ancestor assignment for reads with multiple alignments against different references. It is a command line tool that outputs a text file in "lca" format.
+This is the official development repository for ngsLCA (next generation sequence Lowest Common Ancestor algorithm). The toolkit includes two modules, ngsLCA main program and ngsLCA R package. The ngsLCA main program provides a fast and flexible taxonomic classification of DNA reads aligned to reference databases containing multiple organisms. The classification builds upon the NCBI taxonomy and performs a naïve lowest common ancestor assignment for reads with multiple alignments against different references. It is a command line tool that outputs a text file in "lca" format.
 
 The ngsLCA R package provides functionality for processing "lca" files and illustrating the taxonomic profiles. It supplies R functions for quick transformation of the "lca" files to tables in different formats after filtering, e.g., a regular tab separated table and MEGAN compatible formats, for de-contamination if laboratory controls have been sequenced and are provided, and for splitting taxa into different kingdoms (or user-defined taxonomic groups) and taxonomic ranks. Functions are also provided for outputting heatmaps, barplots and stratplots as well as NMDS and rarefaction analysis for a quick overview of the dataset.
 
 # Building ngsLCA
-ngsLCA main program requires [HTSlib](https://github.com/samtools/htslib) which is a common library used for handling high-throughput sequencing data. You can install it as shown below or link to a previously-installed HTSlib when running make on ngsLCA.  
+ngsLCA main program requires [HTSlib](https://github.com/samtools/htslib) which is a common library used for handling high-throughput sequencing data. You can install it as shown below or link to a previously-installed HTSlib when running make on ngsLCA.
 
 
 ```
@@ -30,12 +30,16 @@ or from [github](https://github.com/wyc661217/ngsLCA) with:
 remotes::install_github("wyc661217/ngsLCA")
 ```
 
+# Reference genomic database
+The toolkit is built upon the [NCBI taxonomy](https://www.ncbi.nlm.nih.gov/taxonomy) therefore requires the reference database(s) complying to the NCBI format, i.e., fasta header should contain accession ID as the first string that appears in the [NCBI access2taxID file](https://ftp.ncbi.nlm.nih.gov/pub/taxonomy/accession2taxid/nucl_gb.accession2taxid.gz), and the corresponded taxaID is present in NCBI taxonomy dmp files. This can be the NCBI-nt, or any divisions of NCBI-RefSeq. For custom reference genomes not covered by NCBI, their accession IDs and the corresponded NCBI taxonomic IDs need to be manually attached to the NCBI access2taxID file before running the ngsLCA main program.
+
+
 # Test dataset
 For a quick test of whether the installation of ngsLCA was successful, input alignments files in bam format can be found in the folder: "bam_files". To generate alignment files from your own data (in bam/sam/sam.gz) please follow this quick guide:
 
 1. Download raw sequencing data, example fastq-files can be found in the fastq folder (It is assumed that all fastq-files have been demultiplexed, trimmed and quality controlled). 
 
-2. Download a database of your own choice. The toolkit is built upon the NCBI taxonomy therefore requires the reference database(s) complying to the NCBI format, i.e., fasta header should contain accession ID as the first string that appears in the NCBI access2taxID file, and the corresponded taxaID is present in NCBI taxonomy dmp files. This can be the NCBI-nt, NCBI-RefSeq, or a subset like the NCBI-RefSeq plastid database:
+2. Download a database of your own choice. Here we use NCBI-RefSeq plastid database:
 
 ```
 mkdir refseq_plastids;
