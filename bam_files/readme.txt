@@ -1,1 +1,1 @@
-This folder contains bam files woth alignments of short fragmented ancient DNA align to the refseq plastid database. The files can be parsed to ngsLCA for taxonomic classificaiton and eventually processed in the ngsLCA visualizing script ngsLCA_interpret.R. 
+This folder contains bam files with alignments of short fragmented ancient DNA aligned to the refseq plastid database. The files can be parsed to ngsLCA for taxonomic classification and eventually processed in the ngsLCA visualizing script ngsLCA_interpret.R. 
