@@ -70,8 +70,7 @@ mkdir ncbi_tax_dmp;
 cd ncbi_tax_dmp/;
 wget https://ftp.ncbi.nlm.nih.gov/pub/taxonomy/new_taxdump/new_taxdump.zip;
 unzip new_taxdump.zip;
-wget https://ftp.ncbi.nlm.nih.gov/pub/taxonomy/accession2taxid/nucl_gb.accession2taxid.gz;
-gunzip nucl_gb.accession2taxid.gz;
+wget https://ftp.ncbi.nlm.nih.gov/pub/taxonomy/accession2taxid/nucl_gb.accession2taxid.gz
 ```
 
 ## Running ngsLCA main program
