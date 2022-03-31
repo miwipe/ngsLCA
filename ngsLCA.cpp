@@ -14,6 +14,7 @@ int mod_out[]=  {1333996 , 1333996 ,1582270,1914213,1917265,1915309 ,263865,2801
 #include <signal.h>//for catching ctrl+c, allow threads to finish
 #include <algorithm>
 #include <errno.h>
+#include <libgen.h>
 #include <sys/stat.h>
 #include <htslib/bgzf.h>
 #include <htslib/kstring.h>
