@@ -7,8 +7,6 @@
 :align: center
 ``` -->
 
-
-# ngsLCA
 ![compile](https://github.com/miwipe/ngsLCA/actions/workflows/build-tests.yml/badge.svg)
 
 This is the official development repository for ngsLCA (next generation sequence Lowest Common Ancestor algorithm). The toolkit includes two modules, ngsLCA main program and ngsLCA R package. The ngsLCA main program provides a fast and flexible taxonomic classification of DNA reads aligned to reference databases containing multiple organisms. The classification builds upon the NCBI taxonomy and performs a naïve lowest common ancestor assignment for reads with multiple alignments against different references. It is a command line tool that outputs a text file in "lca" format.
