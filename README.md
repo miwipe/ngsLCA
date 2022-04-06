@@ -1,6 +1,6 @@
-![Logo](ngsLCA_logo.png)
+![Logo](ngsLCA_Logo.png)
 <!--
-```{image} ngsLCA_logo.png
+```{image} ngsLCA_Logo.png
 :alt: logo
 :class: bg-primary
 :width: 500px
