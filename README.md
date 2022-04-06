@@ -1,3 +1,13 @@
+![Logo](ngsLCA_logo.png)
+<!--
+```{image} ngsLCA_logo.png
+:alt: logo
+:class: bg-primary
+:width: 500px
+:align: center
+``` -->
+
+
 # ngsLCA
 ![compile](https://github.com/miwipe/ngsLCA/actions/workflows/build-tests.yml/badge.svg)
 
