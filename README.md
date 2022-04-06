@@ -35,7 +35,7 @@ The toolkit is built upon the [NCBI taxonomy](https://www.ncbi.nlm.nih.gov/taxon
 
 
 # Test dataset
-For a quick test of whether the installation of ngsLCA was successful, input alignments files in bam format can be found in the folder: "bam_files". To generate alignment files from your own data (in bam/sam/sam.gz) please follow this quick guide:
+For a quick test of whether the installation of ngsLCA was successful, input alignments files in bam format can be found here https://sid.erda.dk/sharelink/AqTXI6E560. If you want to generate alignment files using your own data (in bam/sam/sam.gz) please follow this quick guide:
 
 1. Download raw sequencing data, example fastq-files can be found in the fastq folder (It is assumed that all fastq-files have been demultiplexed, trimmed and quality controlled). 
 
