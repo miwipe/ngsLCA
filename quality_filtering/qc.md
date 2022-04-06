@@ -9,7 +9,7 @@ conda env create --file environment.yaml
 conda activate ngsLCA
 ```
 
-Next, we first use fastp (https://github.com/OpenGene/fastp) to trim the reads, remove poly X tails, low complexity reads and nucleotides with low qualities (OBS the deduplication function of the 
+Next, we first use fastp (https://github.com/OpenGene/fastp) to trim the reads, remove poly X tails, low complexity reads and nucleotides with low qualities (OBS the deduplication function in version 0.23.1 isn't removing duplicates and we therefore added the steop below). 
 ```
 for file in *fq
 do
