@@ -1,4 +1,6 @@
-# This page decribes the process of trimming adaptors, quality filtering, removal of low complexity and deduplication of raw fastq data
+# Raw read trimming and quality check 
+
+This page decribes the process of trimming adaptors, quality filtering, removal of low complexity and deduplication of raw fastq data
 
 We here use two tools (fastp and sga) for processing raw fastq data, however there exists a lot more out there and the reason for choosing these are that they are easy to use, fast, reliable and can perform the desired analysis or filtering. 
 Both tools are available through bioconda, and we therefore recommend setting up conda and running the QC filtering in this environment. 

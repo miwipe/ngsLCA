@@ -1,0 +1,9 @@
+name: ngsLCA
+channels:
+  - conda-forge
+  - bioconda
+dependencies:
+  - python==3.9
+  - sga
+  - fastp
+  - ngsLCA
