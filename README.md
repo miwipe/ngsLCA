@@ -3,7 +3,7 @@
 ```{image} ngsLCA_Logo.png
 :alt: logo
 :class: bg-primary
-:width: 500px
+:width: 2000px
 :align: center
 ``` -->
 
