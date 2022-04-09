@@ -1,8 +1,8 @@
 #modied from htslib makefile
-FLAGS=-O3 
+FLAGS2=-O3 -std=c++11 
 
-CFLAGS += $(FLAGS)
-CXXFLAGS += $(FLAGS)
+CFLAGS += $(FLAGS2)
+CXXFLAGS += $(FLAGS2)
 
 CSRC = $(wildcard *.c) 
 CXXSRC = $(wildcard *.cpp)
@@ -22,6 +22,12 @@ endif
 
 
 -include $(OBJ:.o=.d)
+
+ifdef LDFLAGS
+FLAGS += $(LDFLAGS)
+else
+FLAGS += $(FLAGS2)
+endif
 
 ifdef HTSSRC
 %.o: %.c
