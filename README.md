@@ -18,11 +18,12 @@ We encourage that you manage your packages and environments using conda (https:/
 
 ## Installation using conda
 Download the environment file and create the conda environment, this will install ngsLCA, fastp, sga, bowtie2, samtools and their dependencies. All necessary for trimming, removing low complexity reads, deduplication mapping and sorting files for the taxonomic assigment using ngsLCA. 
-´´´
+
+```
 wget https://github.com/miwipe/ngsLCA/blob/master/environment.yaml 
 conda env create -f environment.yaml 
 conda activate ngsLCA 
-´´´
+```
 
 # Build ngsLCA from development version by cloning the github repo
 ngsLCA main program requires [HTSlib](https://github.com/samtools/htslib) which is a common library used for handling high-throughput sequencing data. You can install it as shown below or link to a previously-installed HTSlib when running make on ngsLCA.
