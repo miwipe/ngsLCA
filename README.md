@@ -13,9 +13,19 @@ This is the official development repository for ngsLCA (next generation sequence
 
 The ngsLCA R package provides functionality for processing "lca" files and illustrating the taxonomic profiles. It supplies R functions for quick transformation of the "lca" files to tables in different formats after filtering, e.g., a regular tab separated table and MEGAN compatible formats, for de-contamination if laboratory controls have been sequenced and are provided, and for splitting taxa into different kingdoms (or user-defined taxonomic groups) and taxonomic ranks. Functions are also provided for outputting heatmaps, barplots and stratplots as well as NMDS and rarefaction analysis for a quick overview of the dataset.
 
-# Building ngsLCA
-ngsLCA main program requires [HTSlib](https://github.com/samtools/htslib) which is a common library used for handling high-throughput sequencing data. You can install it as shown below or link to a previously-installed HTSlib when running make on ngsLCA.
+# Installation
+We encourage that you manage your packages and environments using conda (https://docs.conda.io/en/latest/) 
 
+## Installation using conda
+Download the environment file and create the conda environment, this will install ngsLCA, fastp, sga, bowtie2, samtools and their dependencies. All necessary for trimming, removing low complexity reads, deduplication mapping and sorting files for the taxonomic assigment using ngsLCA. 
+´´´
+wget https://github.com/miwipe/ngsLCA/blob/master/environment.yaml 
+conda env create -f environment.yaml 
+conda activate ngsLCA 
+´´´
+
+# Build ngsLCA from development version by cloning the github repo
+ngsLCA main program requires [HTSlib](https://github.com/samtools/htslib) which is a common library used for handling high-throughput sequencing data. You can install it as shown below or link to a previously-installed HTSlib when running make on ngsLCA.
 
 ```
 git clone --recursive https://github.com/SAMtools/htslib
