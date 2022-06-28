@@ -23,7 +23,7 @@ jobs:
 
     - name: Install dependencies    
       run: |
-        sudo apt-get update;apt-get install -y libbz2-dev liblzma-dev libcurl4-openssl-dev
+        sudo apt-get update;sudo apt-get install -y libbz2-dev liblzma-dev libcurl4-openssl-dev
     - name: prepare htslib
       run: git clone --branch=develop --recursive https://github.com/samtools/htslib.git;cd htslib; make;cd ..; 
     - name: Run make
