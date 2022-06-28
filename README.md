@@ -123,7 +123,7 @@ The file is tab separated. The first column contains the read metadata which is 
 
 # Running ngsLCA R package
 ## Example workflow
-Running ngsLCA R package requires all lca files to be processed being placed in a folder as input, with each input lca file normally representing a sample. The following example workflow will run through all ngsLCA R functions. The output files and results in this example will be generated into “Desktop/project_files/lca_files/run03”.
+Running ngsLCA R package requires all lca files to be processed being placed in a folder as input, with each input lca file normally representing a sample. The following example workflow will run through all ngsLCA R functions. The output files and results in this example will be generated into “Desktop/project_files/lca_files/run03”. Detailed descriptions into the funtion and parameters for each R function can be found in its help page within R.
 
 Define work directory and name of the run:
 
