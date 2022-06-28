@@ -115,6 +115,26 @@ The similarity score function works in the same way as for the edit distance, wi
 ngsLCA/ngsLCA -simscorelow 0.95 -simscorehigh 1.0 -names ncbi_tax_dmp/names.dmp -nodes ncbi_tax_dmp/nodes.dmp -acc2tax ncbi_tax_dmp/nucl_gb.accession2taxid.gz -bam file_name.merged.sorted.bam  -outnames outfile.ss095to1
 ```
 
+### Full explanation of options
+
+| Syntax      | Description |
+| ----------- | ----------- |
+| -bam      | filename for input bam file       |
+| -editdistmin   | minimum editdistance allowed        |
+| -editdistmax   | maximum editdistance allowed        |
+| -simscorelow   | minimum editdistance allowed  as proportion      |
+| -simscoremax   | maximum editdistance allowed   as proportion     |
+| -names      | filename for the names database       |
+| -nodes   | filename for the nodes database        |
+| -acc2tax   | filename for the accesion to taxid database        |
+| -bam      | filename for input bam file       |
+| -outnames   | prefix for the output filenames generated        |
+| -minmapq   | minimum mapping quality allowed        |
+| -discard      | discard reads with a flag value, default 512       |
+
+
+
+
 ## The output file (.lca) format
 The resulting file (.lca) from the ngsLCA main program is a flat text file in which each line contains a unique read that has been assigned to its LCA with the specified similarity.
 
