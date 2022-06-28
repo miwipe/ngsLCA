@@ -70,7 +70,7 @@ rm *.fna;
 bowtie2-build --threads 5 plastids.fa plastids 
 ```
 
-3. Align your quality checked reads against the database, an example:
+3. Align your quality checked reads (refer to this [repository](https://github.com/miwipe/ngsLCA/tree/master/quality_filtering) for suggested qulity controls before alignment) against the database, an example:
 ```
 bowtie2 --threads 10 -k 1000 -x refseq_plastids/plastids -U file_name.fq --no-unal  | samtools view -bS - > file_name.plastids.bam
 ```
