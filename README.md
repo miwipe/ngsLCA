@@ -254,12 +254,5 @@ ngsLCA_NMDS(path=working_directory,
 ```
 
 
-## Example output and result
-![Logo](ngsLCA_Logo.png)
-<!--
-```{image} ngsLCA_Logo.png
-:alt: logo
-:class: bg-primary
-:width: 2000px
-:align: center
-``` -->
+## Example output illustrations
+[ngsLCA_output_example.pdf](https://github.com/miwipe/ngsLCA/files/9013542/ngsLCA_output_example.pdf)
