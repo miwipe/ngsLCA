@@ -152,7 +152,7 @@ working_directory="Desktop/project_files/lca_files/" #change it to the path of y
 run_name="run03"
 ```
 
-Generate a complete taxa profile by combining all input lca files (this step is required for running all other functions):
+Generate a complete taxa profile by combining all input lca files (this step is required for running all other functions). It will generate a tab separated text file (“complete_profile.txt”) into the folder named after “run_name” in the working directory, in which the first 3 columns are NCBI taxaID, taxaname, and taxa rank. Each of the following columns shows the reads abundance of an input .lca file.
 
 ``` r
 ngsLCA_profile(path=working_directory,
@@ -160,7 +160,7 @@ ngsLCA_profile(path=working_directory,
                metadata="Desktop/project_files/sample_metadata.txt") #change it to the full path of your sample metadata.
 ```
 
-Filter the combined taxa profile:
+Filter the combined taxa profile. This will filter the complete_profile.txt.
 
 ``` r
 ngsLCA_filter(path=working_directory,
@@ -171,7 +171,7 @@ ngsLCA_filter(path=working_directory,
               threshold.3=5)
 ```
 
-De-contaminate the combined taxa profile:
+De-contaminate the combined taxa profile. This will generate a contanimation list based on the negetive controls. This will generate a contamination list based on the negative controls. The list taxa will be subtracted from the complete_profile.txt.
 
 ``` r
 ngsLCA_deContam(path=working_directory,
@@ -182,7 +182,7 @@ ngsLCA_deContam(path=working_directory,
                 threshold.3_control=5)
 ```
 
-Group taxa into user-defined taxa groups:
+Group taxa in complete_profile.txt into user-defined taxa groups.
 
 ``` r
 ngsLCA_group(path=working_directory,
@@ -191,7 +191,7 @@ ngsLCA_group(path=working_directory,
              threshold.perGroup=0)
 ```
 
-Classify taxa to taxonomic ranks:
+Classify taxa in complete_profile.txt to taxonomic ranks. 
 
 ``` r
 ngsLCA_rank(path=working_directory,
@@ -199,21 +199,21 @@ ngsLCA_rank(path=working_directory,
             rank.name="species,genus,family")
 ```
 
-Count reads and taxa numbers:
+Count reads and taxa numbers. This will generate statistics for the reads and taxa numbers for all above filters, groups, and classifications.
 
 ``` r
 ngsLCA_count(path=working_directory,
              run=run_name)
 ```
 
-Generate files that can be inputted into Megan for taxa profiling:
+Generate files that can be inputted into Megan for taxa profiling.
 
 ``` r
 ngsLCA_meganFile(path=working_directory,
                  run=run_name)
 ```
 
-Generate taxa abundance heatmaps:
+Generate taxa abundance heatmaps. An example is showing in the end.
 
 ``` r
 ngsLCA_heatmap(path=working_directory,
@@ -221,7 +221,7 @@ ngsLCA_heatmap(path=working_directory,
                taxa.number=20)
 ```
 
-Generate taxa abundance barplots:
+Generate taxa abundance barplots. An example is showing in the end.
 
 ``` r
 ngsLCA_barplot(path=working_directory,
@@ -229,7 +229,7 @@ ngsLCA_barplot(path=working_directory,
                taxa.number=20)
 ```
 
-Generate taxa abundance stratplots:
+Generate taxa abundance stratplots. An example is showing in the end.
 
 ``` r
 ngsLCA_stratplot(path=working_directory,
@@ -237,14 +237,14 @@ ngsLCA_stratplot(path=working_directory,
                  taxa.number=10)
 ```
 
-Perform rarefaction on taxa reads abundance:
+Perform rarefaction on taxa reads abundance. An example is showing in the end.
 
 ``` r
-ngsLCA_rarefy(path=working_directory,
+ngsLCA_rarefy(path=working_directory. An example is showing in the end.
               run=run_name)
 ```
 
-Perform taxa profiles NMDS:
+Perform taxa profiles NMDS. An example is showing in the end.
 
 ``` r
 ngsLCA_NMDS(path=working_directory,
