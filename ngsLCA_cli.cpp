@@ -35,6 +35,26 @@ void pars_free(pars *p){
   free(p);
 }
 
+int checkIfSorted(char *str){
+
+   //check if proper header exists
+   if(strncmp(str,"@HD",3)!=0){
+     fprintf(stderr,"\t-> We require a proper header starting with @HD for metadamage\n");
+     fprintf(stderr,"\t-> We observed: \'%.10s\' will exit\n",str);
+     return 1;
+   }
+   //check if SO:coordinate exists
+   char *so = strstr(str,"SO:queryname");
+   if(so==NULL){
+     fprintf(stderr,"\t-> ERROR: We require files to be sorted by readname, will exit\n");
+     return 2;
+   }
+   if(strchr(str,'\n')<so){
+     fprintf(stderr,"\t-> We require a SO:queryname tag in the first line of header\n");
+     return 3;
+   }
+   return 0;
+ }
 
 int fexists(const char* str){///@param str Filename given as a string.
   fprintf(stderr,"\t-> Checking if exits: \'%s\'\n",str);
@@ -67,6 +87,7 @@ void *read_header_thread(void *ptr){
   p->header = sam_hdr_read(p->hts);
   assert(p->header);
   fprintf(stderr,"\t-> [thread1] Done reading header: %.2f sec, header contains: %d \n",(float)(time(NULL) - t),p->header->n_targets);
+  checkIfSorted(p->header->text);
   pthread_mutex_unlock(&mutex1);
 }
 
