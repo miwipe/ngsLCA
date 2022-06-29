@@ -117,7 +117,7 @@ The similarity score function works in the same way as for the edit distance, wi
 ngsLCA/ngsLCA -simscorelow 0.95 -simscorehigh 1.0 -names ncbi_tax_dmp/names.dmp -nodes ncbi_tax_dmp/nodes.dmp -acc2tax ncbi_tax_dmp/nucl_gb.accession2taxid.gz -bam file_name.merged.sorted.bam  -outnames outfile.ss095to1
 ```
 
-### Full explanation of options
+## Full explanation of options
 
 | Syntax      | Description |
 | ----------- | ----------- |
@@ -255,3 +255,6 @@ ngsLCA_NMDS(path=working_directory,
             dimension=2,
             trymax=10)
 ```
+
+
+## Example output and result
