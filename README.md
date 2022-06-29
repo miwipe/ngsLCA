@@ -255,3 +255,6 @@ ngsLCA_NMDS(path=working_directory,
             dimension=2,
             trymax=10)
 ```
+
+
+## Example output and result
