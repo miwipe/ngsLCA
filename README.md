@@ -255,4 +255,4 @@ ngsLCA_NMDS(path=working_directory,
 
 
 ## Example output illustrations
-[ngsLCA_output_example.pdf](https://github.com/miwipe/ngsLCA/files/9013542/ngsLCA_output_example.pdf)
+![ngsLCA_output_example](https://user-images.githubusercontent.com/40031671/176518743-6b5dfad1-a0d4-42eb-b984-5d1037a670fd.png)
