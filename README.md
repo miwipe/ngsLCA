@@ -263,5 +263,3 @@ ngsLCA_NMDS(path=working_directory,
 :width: 2000px
 :align: center
 ``` -->
-
-[![compiling](https://github.com/miwipe/ngsLCA/actions/workflows/build-tests.yml/badge.svg)](https://github.com/miwipe/ngsLCA/actions/workflows/build-tests.yml) 
