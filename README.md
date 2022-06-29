@@ -199,7 +199,7 @@ ngsLCA_rank(path=working_directory,
             rank.name="species,genus,family")
 ```
 
-Count reads and taxa numbers. This will generate statistics for the reads and taxa numbers for all above filters, groups, and classifications.
+Count reads and taxa numbers. This will generate statistics for the reads and taxa numbers for all above filters, groups, and classifications. Example are shown in the following example Figure a and b.
 
 ``` r
 ngsLCA_count(path=working_directory,
@@ -213,7 +213,7 @@ ngsLCA_meganFile(path=working_directory,
                  run=run_name)
 ```
 
-Generate taxa abundance heatmaps. An example is showing in the end.
+Generate taxa abundance heatmaps. An example is shown in the following example Figure d.
 
 ``` r
 ngsLCA_heatmap(path=working_directory,
@@ -221,7 +221,7 @@ ngsLCA_heatmap(path=working_directory,
                taxa.number=20)
 ```
 
-Generate taxa abundance barplots. An example is showing in the end.
+Generate taxa abundance barplots. An example is shown in the following example Figure c.
 
 ``` r
 ngsLCA_barplot(path=working_directory,
@@ -229,7 +229,7 @@ ngsLCA_barplot(path=working_directory,
                taxa.number=20)
 ```
 
-Generate taxa abundance stratplots. An example is showing in the end.
+Generate taxa abundance stratplots. An example is shown in the following example Figure e.
 
 ``` r
 ngsLCA_stratplot(path=working_directory,
@@ -237,14 +237,14 @@ ngsLCA_stratplot(path=working_directory,
                  taxa.number=10)
 ```
 
-Perform rarefaction on taxa reads abundance. An example is showing in the end.
+Perform rarefaction on taxa reads abundance. An example is shown in the following example Figure f.
 
 ``` r
-ngsLCA_rarefy(path=working_directory. An example is showing in the end.
+ngsLCA_rarefy(path=working_directory,
               run=run_name)
 ```
 
-Perform taxa profiles NMDS. An example is showing in the end.
+Perform taxa profiles NMDS. An example is shown in the following example Figure g.
 
 ``` r
 ngsLCA_NMDS(path=working_directory,
