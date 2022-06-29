@@ -119,20 +119,17 @@ ngsLCA/ngsLCA -simscorelow 0.95 -simscorehigh 1.0 -names ncbi_tax_dmp/names.dmp 
 
 ## Full explanation of options
 
-| Syntax      | Description |
-| ----------- | ----------- |
-| -bam      | filename for input bam file       |
-| -editdistmin   | minimum editdistance allowed        |
-| -editdistmax   | maximum editdistance allowed        |
-| -simscorelow   | minimum editdistance allowed  as proportion      |
-| -simscoremax   | maximum editdistance allowed   as proportion     |
-| -names      | filename for the names database       |
-| -nodes   | filename for the nodes database        |
-| -acc2tax   | filename for the accesion to taxid database        |
-| -bam      | filename for input bam file       |
-| -outnames   | prefix for the output filenames generated        |
-| -minmapq   | minimum mapping quality allowed        |
-| -discard      | discard reads with a flag value, default 512       |
+-bam            filename for input bam file
+-editdistmin    minimum editdistance allowed
+-editdistmax    maximum editdistance allowed
+-simscorelow    minimum editdistance allowed, as proportion
+-simscoremax    maximum editdistance allowed, as proportion
+-names          filename for [NCBI taxdump names.dmp](https://ftp.ncbi.nih.gov/pub/taxonomy/new_taxdump/)
+-nodes          filename for [NCBI taxdump nodes.dmp](https://ftp.ncbi.nih.gov/pub/taxonomy/new_taxdump/)
+-acc2tax        filename for [NCBI nucl_gb.accession2taxid](https://ftp.ncbi.nih.gov/pub/taxonomy/accession2taxid/)
+-outnames       prefix for the output filenames generated
+-minmapq        minimum mapping quality allowed
+-discard        discard reads with a flag value, default 512
 
 
 
