@@ -119,7 +119,7 @@ ngsLCA/ngsLCA -simscorelow 0.95 -simscorehigh 1.0 -names ncbi_tax_dmp/names.dmp 
 
 ## Full explanation of options
 
--bam\t\t\tfilename for input bam file
+-bam            filename for input bam file
 -editdistmin    minimum editdistance allowed
 -editdistmax    maximum editdistance allowed
 -simscorelow    minimum editdistance allowed, as proportion
@@ -131,8 +131,9 @@ ngsLCA/ngsLCA -simscorelow 0.95 -simscorehigh 1.0 -names ncbi_tax_dmp/names.dmp 
 -minmapq        minimum mapping quality allowed
 -discard        discard reads with a flag value, default 512
 
-
-
+| Header 1  | Header 2 |
+2| --------  | -------- |
+3| data      | Some long data that <br /> spans multiple lines |
 
 ## The output file (.lca) format
 The resulting file (.lca) from the ngsLCA main program is a flat text file in which each line contains a unique read that has been assigned to its LCA with the specified similarity.
