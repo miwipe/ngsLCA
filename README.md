@@ -119,7 +119,7 @@ ngsLCA/ngsLCA -simscorelow 0.95 -simscorehigh 1.0 -names ncbi_tax_dmp/names.dmp 
 
 ## Full explanation of options
 
--bam            filename for input bam file
+-bam\t\t\tfilename for input bam file
 -editdistmin    minimum editdistance allowed
 -editdistmax    maximum editdistance allowed
 -simscorelow    minimum editdistance allowed, as proportion
