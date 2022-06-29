@@ -255,3 +255,13 @@ ngsLCA_NMDS(path=working_directory,
 
 
 ## Example output and result
+![Logo](ngsLCA_Logo.png)
+<!--
+```{image} ngsLCA_Logo.png
+:alt: logo
+:class: bg-primary
+:width: 2000px
+:align: center
+``` -->
+
+[![compiling](https://github.com/miwipe/ngsLCA/actions/workflows/build-tests.yml/badge.svg)](https://github.com/miwipe/ngsLCA/actions/workflows/build-tests.yml) 
