@@ -22,7 +22,7 @@ We encourage that you manage your packages and environments using conda (https:/
 Download the environment file and create the conda environment, this will install ngsLCA, fastp, sga, bowtie2, samtools and their dependencies. All necessary for trimming, removing low complexity reads, deduplication mapping and sorting files for the taxonomic assigment using ngsLCA. 
 
 ```
-wget https://github.com/miwipe/ngsLCA/blob/master/environment.yaml 
+wget https://raw.githubusercontent.com/miwipe/ngsLCA/master/environment.yaml
 conda env create -f environment.yaml 
 conda activate ngsLCA 
 ```
