@@ -21,7 +21,7 @@ int mod_out[]=  {1333996 , 1333996 ,1582270,1914213,1917265,1915309 ,263865,2801
 
 #include "ngsLCA_cli.h"
 #include "ngsLCA_format.h"
-
+#include "version.h"
 
 int SIG_COND =1;//if we catch signal then quit program nicely
 int VERBOSE =1;
@@ -136,8 +136,8 @@ int val = atoi(tok);
       int valinbam = bam_name2id(hdr,key);
 if(valinbam==-1)
   continue;
-      bgzf_write(fp,&valinbam,sizeof(int));
-      bgzf_write(fp,&val,sizeof(int));
+assert(bgzf_write(fp,&valinbam,sizeof(int))==sizeof(int));
+assert(bgzf_write(fp,&val,sizeof(int))==sizeof(int));
 //fprintf(stderr,"key: %s val: %d valinbam:%d\n",key,val,valinbam);
 
       if(am->find(valinbam)!=am->end())
@@ -149,7 +149,7 @@ bgzf_close(fp2);
 }else{
 int valinbam,val;
 while(bgzf_read(fp,&valinbam,sizeof(int))){
-bgzf_read(fp,&val,sizeof(int));
+assert(bgzf_read(fp,&val,sizeof(int))==sizeof(int));y
   (*am)[valinbam] = val;
   }
 }
@@ -650,6 +650,7 @@ int2node makeNodes(int2int &parent){
 #endif
 
 int main(int argc, char **argv){
+  fprintf(stderr,"\t-> ngslca version: %s (htslib: %s) build(%s %s)\n",NGSLCA_VERSION,hts_version(),__DATE__,__TIME__); 
   if(argc==1){
     fprintf(stderr,"\t-> ./ngsLCA -names -nodes -acc2tax [-editdist[min/max] -simscore[low/high] -minmapq -discard] -bam \n");
     return 0;
@@ -665,10 +666,12 @@ int main(int argc, char **argv){
   }
   pars *p=get_pars(--argc,++argv);
   print_pars(stderr,p);
+  fprintf(p->fp1,"\t-> ngslca version: %s (htslib: %s) build(%s %s)\n",NGSLCA_VERSION,hts_version(),__DATE__,__TIME__); 
   fprintf(p->fp1,"#");
   for(int i=0;i<argc;i++)
     fprintf(p->fp1," %s",argv[i]);
   fprintf(p->fp1,"\n");
+  
   //map of bamref ->taxid
 
   int2int *i2i=NULL;
