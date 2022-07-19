@@ -59,8 +59,17 @@ void mod_db(int *in,int *out,int2int &parent, int2char &rank,int2char &name_map)
   for(int i=0;i<24;i++){
     assert(parent.count(out[i])==1);
     parent[in[i]] = parent[out[i]];
-    rank[in[i]] = rank[out[i]];
-    name_map[in[i]] = strdup("satan");
+    int2char::iterator it = rank.find(in[i]);
+    if(it==rank.end())
+      continue;
+free(it->second);
+it->second = strdup(rank[out[i]]);
+
+it = name_map.find(in[i]);
+if(it==name_map.end())
+      continue;
+free(it->second);
+it->second = strdup(name_map[out[i]]);
   }
 
 }
@@ -580,7 +589,7 @@ void parse_nodes(const char *fname,int2char &rank,int2int &parent){
 
     int2int::iterator it = parent.find(atoi(toks[0]));
     if(it!=parent.end())
-      fprintf(stderr,"\t->[%s] duplicate name(column0): %s\n",fname,toks[0]);
+      fprintf(stderr,"\t->[%s] Duplicate name(column0): %s\n",fname,toks[0]);
     else{
       int key=atoi(toks[0]);
       int val= atoi(toks[1]);
@@ -724,8 +733,9 @@ hts(p->fp1,p->hts,*i2i,parent,p->header,rank,name_map,p->fp3,p->minmapq,p->disca
   //some cleanup, that was lacking 19july 2022, embarrsing...
   for(int2char::iterator it = name_map.begin();it!=name_map.end();it++)
     free(it->second);
-  // for(int2char::iterator it = rank.begin();it!=rank.end();it++)
-  //free(it->second);
+  for(int2char::iterator it = rank.begin();it!=rank.end();it++)
+    free(it->second);
+
   delete i2i;
   fprintf(stderr, "\t-> [ALL done] walltime used =  %.2f sec\n", (float)(time(NULL) - t2));  
   return 0;

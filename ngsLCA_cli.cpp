@@ -42,6 +42,10 @@ void pars_free(pars *p){
     sam_hdr_destroy(p->header);
   if(p->hts)
     sam_close(p->hts);
+  if(p->outnames)
+    free(p->outnames);
+  if(p->namesfile)
+    free(p->namesfile);
   free(p);
 }
 
