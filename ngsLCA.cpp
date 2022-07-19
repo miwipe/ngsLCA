@@ -149,7 +149,7 @@ bgzf_close(fp2);
 }else{
 int valinbam,val;
 while(bgzf_read(fp,&valinbam,sizeof(int))){
-assert(bgzf_read(fp,&val,sizeof(int))==sizeof(int));y
+assert(bgzf_read(fp,&val,sizeof(int))==sizeof(int));
   (*am)[valinbam] = val;
   }
 }
