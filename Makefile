@@ -80,7 +80,7 @@ ngsLCA: version.h $(OBJ)
 endif
 
 clean:	
-	rm -f ngsLCA *.o *.d
+	rm -f ngsLCA *.o *.d version.h
 
 force:
 
