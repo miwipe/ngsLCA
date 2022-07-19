@@ -32,6 +32,16 @@ void pars_free(pars *p){
   fclose(p->fp1);
   //fclose(p->fp2);
   fclose(p->fp3);
+  if(p->htsfile)
+    free(p->htsfile);
+  if(p->acc2taxfile)
+    free(p->acc2taxfile);
+  if(p->nodesfile)
+    free(p->nodesfile);
+  if(p->header)
+    sam_hdr_destroy(p->header);
+  if(p->hts)
+    sam_close(p->hts);
   free(p);
 }
 
@@ -182,18 +192,42 @@ pars *get_pars(int argc,char **argv){
     char *key=*argv;
     char *val=*(++argv);
     
-    if(!strcasecmp("-bam",key)) p->htsfile=strdup(val);
-    else if(!strcasecmp("-names",key)) p->namesfile=strdup(val);
-    else if(!strcasecmp("-nodes",key)) p->nodesfile=strdup(val);
-    else if(!strcasecmp("-acc2tax",key)) p->acc2taxfile=strdup(val);
+    if(!strcasecmp("-bam",key)){
+      if(p->htsfile)
+	free(p->htsfile);
+      p->htsfile=strdup(val);
+    }
+    else if(!strcasecmp("-names",key)){
+      if(p->namesfile)
+	free(p->namesfile);
+      p->namesfile=strdup(val);
+    }
+    else if(!strcasecmp("-nodes",key)){
+      if(p->nodesfile)
+	free(p->nodesfile);
+      p->nodesfile=strdup(val);
+    }
+    else if(!strcasecmp("-acc2tax",key)){
+      if(p->acc2taxfile)
+	free(p->acc2taxfile);
+      p->acc2taxfile=strdup(val);
+    }
     else if(!strcasecmp("-editdistMin",key)) p->editdistMin=atoi(val);
     else if(!strcasecmp("-editdistMax",key)) p->editdistMax=atoi(val);
     else if(!strcasecmp("-minmapq",key)) p->minmapq=atoi(val);
     else if(!strcasecmp("-minlength",key)) p->minlength=atoi(val);
     else if(!strcasecmp("-simscoreLow",key)) p->simscoreLow=atof(val);
     else if(!strcasecmp("-simscoreHigh",key)) p->simscoreHigh=atof(val);
-    else if(!strcasecmp("-outnames",key)) p->outnames=strdup(val);
-    else if(!strcasecmp("-out",key)) p->outnames=strdup(val);
+    else if(!strcasecmp("-outnames",key)){
+      if(p->outnames)
+	free(p->outnames);
+      p->outnames=strdup(val);
+    }
+    else if(!strcasecmp("-out",key)){
+      if(p->outnames)
+	free(p->outnames);
+      p->outnames=strdup(val);
+    }
     else if(!strcasecmp("-discard",key)) p->discard=atoi(val);
     else{
       fprintf(stderr,"\t Unknown parameter key:%s val:%s\n",key,val);

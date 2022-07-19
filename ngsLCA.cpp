@@ -96,23 +96,23 @@ void strip(char *line){
 
  
 int2int *bamRefId2tax(bam_hdr_t *hdr,char *acc2taxfile,char *bamfile) { 
-fprintf(stderr,"\t-> Starting to extract (acc->taxid) from binary file: \'%s\'\n",acc2taxfile);
+  fprintf(stderr,"\t-> Starting to extract (acc->taxid) from binary file: \'%s\'\n",acc2taxfile);
 
-int dodump = !fexists3(basename(acc2taxfile),basename(bamfile),".bin");
+  int dodump = !fexists3(basename(acc2taxfile),basename(bamfile),".bin");
 
-fprintf(stderr,"check if exists: %d \n", dodump);
-
-time_t t=time(NULL);
-BGZF *fp= NULL;
-if(dodump)
-  fp = getbgzf3(basename(acc2taxfile),basename(bamfile),".bin","wb",4);
- else
-   fp =  getbgzf3(basename(acc2taxfile),basename(bamfile),".bin","rb",4);
+  fprintf(stderr,"check if exists: %d \n", dodump);
+  
+  time_t t=time(NULL);
+  BGZF *fp= NULL;
+  if(dodump)
+    fp = getbgzf3(basename(acc2taxfile),basename(bamfile),".bin","wb",4);
+  else
+    fp =  getbgzf3(basename(acc2taxfile),basename(bamfile),".bin","rb",4);
   //this contains refname(as int) -> taxid
-int2int *am= new int2int;
+  int2int *am= new int2int;
+  
 
-
-if(dodump){
+  if(dodump){
     char buf[4096];
     int at=0;
     char buf2[4096];
@@ -123,39 +123,39 @@ if(dodump){
     BGZF *fp2 = getbgzf(acc2taxfile,"rb",2);
     bgzf_getline(fp2,'\n',kstr);//skip header
     while(SIG_COND&&bgzf_getline(fp2,'\n',kstr)){
-if(kstr->l==0)
-  break;
-//fprintf(stderr,"at: %d = '%s\'\n",at,kstr->s);
+      if(kstr->l==0)
+	break;
+      //fprintf(stderr,"at: %d = '%s\'\n",at,kstr->s);
       if(!((at++ %100000 ) ))
 	if(isatty(fileno(stderr)))
 	  fprintf(stderr,"\r\t-> At linenr: %d in \'%s\'      ",at,acc2taxfile);
       char *tok = strtok(kstr->s,"\t\n ");
       char *key =strtok(NULL,"\t\n ");
-tok = strtok(NULL,"\t\n ");
-int val = atoi(tok);
+      tok = strtok(NULL,"\t\n ");
+      int val = atoi(tok);
       int valinbam = bam_name2id(hdr,key);
-if(valinbam==-1)
-  continue;
-assert(bgzf_write(fp,&valinbam,sizeof(int))==sizeof(int));
-assert(bgzf_write(fp,&val,sizeof(int))==sizeof(int));
-//fprintf(stderr,"key: %s val: %d valinbam:%d\n",key,val,valinbam);
-
+      if(valinbam==-1)
+	continue;
+      assert(bgzf_write(fp,&valinbam,sizeof(int))==sizeof(int));
+      assert(bgzf_write(fp,&val,sizeof(int))==sizeof(int));
+      //fprintf(stderr,"key: %s val: %d valinbam:%d\n",key,val,valinbam);
+      
       if(am->find(valinbam)!=am->end())
 	fprintf(stderr,"\t-> Duplicate entries found \'%s\'\n",key);
       (*am)[valinbam] = val;
-kstr->l =0;
+      kstr->l =0;
     }
-bgzf_close(fp2);
-}else{
-int valinbam,val;
-while(bgzf_read(fp,&valinbam,sizeof(int))){
-assert(bgzf_read(fp,&val,sizeof(int))==sizeof(int));
-  (*am)[valinbam] = val;
+    bgzf_close(fp2);
+  }else{
+    int valinbam,val;
+    while(bgzf_read(fp,&valinbam,sizeof(int))){
+      assert(bgzf_read(fp,&val,sizeof(int))==sizeof(int));
+      (*am)[valinbam] = val;
+    }
   }
-}
 
-bgzf_close(fp);
-fprintf(stderr,"\t-> Number of entries to use from accesion to taxid: %lu, time taken: %.2f sec\n",am->size(),(float)(time(NULL) - t));
+  bgzf_close(fp);
+  fprintf(stderr,"\t-> Number of entries to use from accesion to taxid: %lu, time taken: %.2f sec\n",am->size(),(float)(time(NULL) - t));
   return am;
 }
 
@@ -377,6 +377,8 @@ void hts(FILE *fp,samFile *fp_in,int2int &i2i,int2int& parent,bam_hdr_t *hdr,int
     }
     if(last==NULL){
       last=strdup(qname);
+      if(seq!=NULL)
+	delete [] seq;
       seq=make_seq(aln);
     }
     if(minlength!=-1&&(aln->core.l_qseq<minlength))
@@ -415,7 +417,8 @@ void hts(FILE *fp,samFile *fp_in,int2int &i2i,int2int& parent,bam_hdr_t *hdr,int
       specs.clear();
       editdist.clear();
       free(last);
-      delete [] seq;
+      if(seq!=NULL)
+	delete [] seq;
       last=strdup(qname);
       seq=make_seq(aln);
     }
@@ -503,9 +506,10 @@ void hts(FILE *fp,samFile *fp_in,int2int &i2i,int2int& parent,bam_hdr_t *hdr,int
   specs.clear();
   editdist.clear();
   bam_destroy1(aln);
-  sam_close(fp_in);
-  
-  return ;//0;
+  if(last)
+    free(last);
+  if(seq)
+    delete [] seq;
 }
 
 int2char parse_names(const char *fname){
@@ -547,6 +551,8 @@ int2char parse_names(const char *fname){
   }
   //  int2char::iterator it = name_map.find(61564);  assert(it!=name_map.end());
   fprintf(stderr,"\t-> [%s] Number of unique names (column1): %lu with third column 'scientific name'\n",fname,name_map.size());
+  gzclose(gz);
+  delete [] toks;
   return name_map;
 }
 
@@ -583,7 +589,8 @@ void parse_nodes(const char *fname,int2char &rank,int2int &parent){
     }
   }
   fprintf(stderr,"\t-> Number of unique names (column1): %lu from file: %s\n",rank.size(),fname);
-
+  delete [] toks;
+  gzclose(gz);
 }
 
 void print_ref_rank_species(bam_hdr_t *h,int2int &i2i,int2char &names,int2char &rank){
@@ -713,6 +720,13 @@ hts(p->fp1,p->hts,*i2i,parent,p->header,rank,name_map,p->fp3,p->minmapq,p->disca
   for(int2int::iterator it=specWeight.begin();0&&it!=specWeight.end();it++)
     fprintf(p->fp2,"%d\t%s\t%d\n",it->first,name_map[it->first],it->second);
   pars_free(p);
+
+  //some cleanup, that was lacking 19july 2022, embarrsing...
+  for(int2char::iterator it = name_map.begin();it!=name_map.end();it++)
+    free(it->second);
+  // for(int2char::iterator it = rank.begin();it!=rank.end();it++)
+  //free(it->second);
+  delete i2i;
   fprintf(stderr, "\t-> [ALL done] walltime used =  %.2f sec\n", (float)(time(NULL) - t2));  
   return 0;
 }

@@ -34,7 +34,7 @@ typedef struct{
   char *acc2taxfile;
   //hts strucutures
   samFile *hts;
-  bam_hdr_t *header;
+  sam_hdr_t *header;
   //parameters for filtering reads
   double simscoreLow;
   double simscoreHigh;
