@@ -48,6 +48,7 @@ typedef struct{
   int discard; //or bitoperation with the flag of the read
   int minlength;
   char2int *charref2taxid;
+  int fixdb;
 }pars;
 
 pars *get_pars(int argc,char **argv);

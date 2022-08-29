@@ -713,6 +713,7 @@ int main(int argc, char **argv){
 
   
   fprintf(stderr,"\t-> Will add some fixes of the ncbi database due to merged names\n");
+if(p->fixdb==1)
   mod_db(mod_in,mod_out,parent,rank,name_map);
 
 hts(p->fp1,p->hts,*i2i,parent,p->header,rank,name_map,p->fp3,p->minmapq,p->discard,p->editdistMin,p->editdistMax,p->simscoreLow,p->simscoreHigh,p->minlength);

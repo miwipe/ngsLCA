@@ -24,6 +24,8 @@ endif
 
 all: ngsLCA
 
+.PHONY: all clean test
+
 PACKAGE_VERSION  = 0.9
 
 ifneq "$(wildcard .git)" ""
@@ -84,3 +86,6 @@ clean:
 
 force:
 
+test:
+	echo "Running unittest of ngslca"
+	cd test;./testAll.sh 

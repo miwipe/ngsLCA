@@ -25,6 +25,8 @@ pars *pars_init(){
   p->discard=516;//discard unmapped and read fail
   p->minlength=-1;
   p->charref2taxid = NULL;
+  p->fixdb = 1;
+  
   return p;
 }
 
@@ -206,6 +208,10 @@ pars *get_pars(int argc,char **argv){
 	free(p->namesfile);
       p->namesfile=strdup(val);
     }
+    else if (!strcasecmp("-fix-ncbi", key))
+      p->fixdb = atoi(val);
+     else if (!strcasecmp("-fix_ncbi", key))
+      p->fixdb = atoi(val);
     else if(!strcasecmp("-nodes",key)){
       if(p->nodesfile)
 	free(p->nodesfile);
@@ -276,7 +282,7 @@ void print_pars(FILE *fp,pars *p){
   fprintf(fp,"\t-> -editdistMax\t%d\n",p->editdistMax);
   fprintf(fp,"\t-> -outnames\t%s\n",p->outnames);
   fprintf(fp,"\t-> -minmapq\t%d\n",p->minmapq);
-
+  fprintf(fp,"\t-> -fix_ncbi\t%d\n",p->fixdb);
 }
 
 BGZF *getbgzf(const char*str1,const char *mode,int nthreads){
