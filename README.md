@@ -60,7 +60,7 @@ For a quick test of whether the installation of ngsLCA was successful, input ali
 
 1. Download raw sequencing data, example fastq-files can be found in the fastq folder (It is assumed that all fastq-files have been demultiplexed, trimmed and quality controlled). 
 
-2. Download a database of your own choice. Here we use NCBI-RefSeq plastid database:
+2. Download a database of your own choice. Here we use NCBI-RefSeq plastid database. We build the refence data into bowtie2 indexed format here and later will use bowtie2 as the aligner. Although bowtie2 achieves fast alignment on large genomic database, it will record the first N hits on each read into the generated BAM file, which are not guaranteed to be the best possible alignments. Other aligners such as BWA and MALT can also be used for generating BAM files for ngsLCA.
 
 ```
 mkdir refseq_plastids;
@@ -71,7 +71,7 @@ cat *.fna > plastids.fa;
 rm *.fna;
 bowtie2-build --threads 5 plastids.fa plastids 
 ```
-Here we build the refence data into bowtie2 indexed format and later will use bowtie2 as the aligner. Although bowtie2 achieves fast alignment on large genomic database, it will record the first N hits on each read into the generated BAM file, which are not guaranteed to be the best possible alignments. Other aligners such as BWA and MALT can also be used for generating BAM files for ngsLCA.
+
 
 3. Align your quality checked reads (refer to this [repository](https://github.com/miwipe/ngsLCA/tree/master/quality_filtering) for suggested qulity controls before alignment) against the database, an example:
 ```
