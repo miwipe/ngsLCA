@@ -153,7 +153,7 @@ working_directory="Desktop/project_files/lca_files/" #change it to the path of y
 run_name="run03"
 ```
 
-Generate a complete taxa profile by combining all input lca files (this step is required for running all other functions). It will generate a tab separated text file (“complete_profile.txt”) into the folder named after “run_name” in the working directory, in which the first 3 columns are NCBI taxaID, taxaname, and taxa rank. Each of the following columns shows the reads abundance of an input .lca file.
+Generate a complete taxa profile by combining all input lca files (this step is required for running all other functions). It will generate a tab separated text file (“complete_profile.txt”) into the folder named after “run_name” in the working directory, in which the first 3 columns are NCBI taxaID, taxaname, and taxa rank. Each of the following columns shows the reads abundance of an input .lca file. You can type `?ngsLCA_profile` to enter the help page for ngsLCA_profile to access an example sample metadata file.
 
 ``` r
 ngsLCA_profile(path=working_directory,
