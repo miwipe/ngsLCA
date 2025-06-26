@@ -133,7 +133,7 @@ ngsLCA/ngsLCA -simscorelow 0.95 -simscorehigh 1.0 -fix_ncbi 0 -names ncbi_tax_dm
 |-outnames      | prefix for the output filenames generated
 |-minmapq       | minimum mapping quality allowed
 |-discard       | discard reads with a flag value, default 512
-|-fix_ncbi      | fixes ncbi taxonomy naming issue, default 1
+|-fix_ncbi      | fixes ncbi taxonomy naming issue, default 0
 
 ## The output file (.lca) format
 The resulting file (.lca) from the ngsLCA main program is a flat text file in which each line contains a unique read that has been assigned to its LCA with the specified similarity.
