@@ -25,7 +25,7 @@ pars *pars_init(){
   p->discard=516;//discard unmapped and read fail
   p->minlength=-1;
   p->charref2taxid = NULL;
-  p->fixdb = 1;
+  p->fixdb = 0;
   
   return p;
 }
