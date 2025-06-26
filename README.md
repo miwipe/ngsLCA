@@ -15,7 +15,7 @@ This is the official development repository for ngsLCA (next generation sequence
 
 The ngsLCA R package provides functionality for processing "lca" files and illustrating the taxonomic profiles. It supplies R functions for quick transformation of the "lca" files to tables in different formats after filtering, e.g., a regular tab separated table and MEGAN compatible formats, for de-contamination if laboratory controls have been sequenced and are provided, and for splitting taxa into different kingdoms (or user-defined taxonomic groups) and taxonomic ranks. Functions are also provided for outputting heatmaps, barplots and stratplots as well as NMDS and rarefaction analysis for a quick overview of the dataset.
 
-**Please note, that if you are working with ancient environmental DNA (shotgun sequenced or capture enriched data) you might want to use (metaDMG-cpp)[https://github.com/metaDMG-dev/metaDMG-cpp] this tool uses ngsLCA while at the same is able to estimate DNA damage at all taxonomic levels)
+**Please note, that if you are working with ancient environmental DNA (shotgun sequenced or capture enriched data) you might want to use (metaDMG-cpp)[https://github.com/metaDMG-dev/metaDMG-cpp] this tool uses ngsLCA while at the same time able to estimate DNA damage at all taxonomic levels). Both of these tools jhave been developed as part of the Holi pipeline (Holi)[https://github.com/miwipe/Holi/tree/main]** 
 
 # Installation
 We encourage that you manage your packages and environments using conda (https://docs.conda.io/en/latest/) 
